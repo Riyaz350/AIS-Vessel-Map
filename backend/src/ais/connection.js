@@ -6,7 +6,7 @@ const EventEmitter = require('events');
 
 class AisFeedConnection extends EventEmitter { 
 
-  constructor({ host, port, reconnectDelayMs = 5000 }) { 
+  constructor({ host, port, reconnectDelayMs = 1000 }) { 
 
     super(); 
 
@@ -55,7 +55,7 @@ class AisFeedConnection extends EventEmitter {
         if (trimmed) this.emit('sentence', trimmed); 
 
       } 
-      console.log(lines)
+      // console.log(lines)
 
     }); 
 
