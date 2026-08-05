@@ -39,6 +39,12 @@ automatically on startup and reconnects if the connection drops.
 - GET /api/vessels        — all current vessel positions
 - GET /api/vessels/:mmsi  — a single vessel by MMSI
 - WebSocket 'vessel:snapshot' / 'vessel:update' events for live data
+
+## Task Recording
+
+A video recording demonstrating the completed AIS Vessel Map task is available here:
+
+[Watch the AIS Vessel Map Task Recording](https://shiptrackscom-my.sharepoint.com/:v:/g/personal/riyaz_ahmed_carga_com/IQB4D7KP4z3dQ6pDSCycNJNqAUR1F72ldf5oti2TwMQ0V7A?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=qDRag2)
  
 ## Architecture
 See docs/ARCHITECTURE.md for schema, API design notes, and how
