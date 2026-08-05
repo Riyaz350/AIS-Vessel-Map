@@ -44,7 +44,7 @@ automatically on startup and reconnects if the connection drops.
 
 A video recording demonstrating the completed AIS Vessel Map task is available here:
 
-[Watch the AIS Vessel Map Task Recording](https://shiptrackscom-my.sharepoint.com/:v:/g/personal/riyaz_ahmed_carga_com/IQB4D7KP4z3dQ6pDSCycNJNqAUR1F72ldf5oti2TwMQ0V7A?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=qDRag2)
+[Watch the AIS Vessel Map Task Recording](https://shiptrackscom-my.sharepoint.com/:v:/g/personal/riyaz_ahmed_carga_com/IQDhdUg0P2yLR57h6mznVISYAQsZUD7jh75ta0791YacGpc?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=UtJoWC)
  
 ## Architecture
 See docs/ARCHITECTURE.md for schema, API design notes, and how
