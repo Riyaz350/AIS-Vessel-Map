@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import { useVesselSocket } from '../hooks/useVesselSocket';
  
-const DEFAULT_CENTER = [1.29, 103.85]; // change to match your feed's region
+const DEFAULT_CENTER = [30.0522, -118.2437];// change to match your feed's region
 const DEFAULT_ZOOM = 6;
  
 function createShipIcon(rotation = 0, color = '#2563eb') {
