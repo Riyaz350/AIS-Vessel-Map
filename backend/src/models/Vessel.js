@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const vesselSchema = new mongoose.Schema(
   {
     mmsi: { type: Number, required: true, unique: true, index: true },
+    imo: { type: Number, default: null, index: true }, 
     name: { type: String, default: null },
     lat: { type: Number, required: true },
     lon: { type: Number, required: true },

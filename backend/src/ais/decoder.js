@@ -11,10 +11,11 @@ function decodeSentence(rawLine) {
         const decoded = new AisDecode(rawLine, pendingParts);
         if (!decoded || !decoded.valid) return null;
 
-        console.log(decoded);
+        // console.log(decoded);
 
         return {
             mmsi: decoded.mmsi,
+            imo: decoded.imo || undefined, // IMO number, from static data messages 
             name: decoded.shipname ? decoded.shipname.trim() : undefined,
             lat: decoded.lat,
             lon: decoded.lon,
