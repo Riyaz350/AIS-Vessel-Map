@@ -1,13 +1,22 @@
-import { useState, useRef, useImperativeHandle, forwardRef } from 'react';
-import { MapContainer, TileLayer, Marker, Tooltip, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
-import { useVesselSocket } from '../hooks/useVesselSocket';
-import VesselDrawer from './VesselDrawer';
+import { useState, useRef, useImperativeHandle, forwardRef } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Tooltip,
+  useMapEvents,
+} from "react-leaflet";
+import L from "leaflet";
+import { useVesselSocket } from "../hooks/useVesselSocket";
+import VesselDrawer from "./VesselDrawer";
+import { useMemo } from "react";
+import { useCollisionRisks } from "../hooks/useCollisionRisks";
+import { Polyline } from "react-leaflet";
 
 const DEFAULT_CENTER = [1.29, 103.85];
 const DEFAULT_ZOOM = 6;
-const DEFAULT_COLOR = '#2563eb';   // normal ship color
-const FOCUSED_COLOR = '#f97316';   // orange — the selected vessel
+const DEFAULT_COLOR = "#2563eb"; // normal ship color
+const FOCUSED_COLOR = "#16f9ee"; // orange — the selected vessel
 
 function createShipIcon(rotation = 0, color = DEFAULT_COLOR) {
   const svg = `
@@ -16,7 +25,12 @@ function createShipIcon(rotation = 0, color = DEFAULT_COLOR) {
       <path d="M12 2 L18 16 L12 13 L6 16 Z" fill="${color}" stroke="#1e3a8a" stroke-width="1"/>
     </svg>
   `;
-  return L.divIcon({ html: svg, className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+  return L.divIcon({
+    html: svg,
+    className: "",
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
 }
 
 // Leaflet marker clicks don't bubble up to the map's own click event (they
@@ -37,11 +51,14 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
   useImperativeHandle(ref, () => ({
     focusVessel(identifier) {
       const target = vessels.find((v) =>
-        identifier.mmsi ? v.mmsi === Number(identifier.mmsi) : v.imo === Number(identifier.imo)
+        identifier.mmsi
+          ? v.mmsi === Number(identifier.mmsi)
+          : v.imo === Number(identifier.imo),
       );
       if (!target) return { found: false };
       setSelectedMmsi(target.mmsi);
-      if (mapRef.current) mapRef.current.flyTo([target.lat, target.lon], 10, { duration: 1.5 });
+      if (mapRef.current)
+        mapRef.current.flyTo([target.lat, target.lon], 10, { duration: 1.5 });
       return { found: true, vessel: target };
     },
     clearSelection() {
@@ -49,28 +66,72 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
     },
   }));
 
+  const risks = useCollisionRisks(vessels, {
+    thresholdNm: 1,
+    maxLookaheadMinutes: 20,
+  });
+  const riskyMmsiSet = useMemo(() => {
+    const set = new Set();
+    risks.forEach((r) => {
+      set.add(r.vesselA.mmsi);
+      set.add(r.vesselB.mmsi);
+    });
+    return set;
+  }, [risks]);
+
+  // color priority: focused > at-risk > normal
+  const RISK_COLOR = "#dc2626";
+  function colorFor(v, isFocused) {
+    if (isFocused) return FOCUSED_COLOR;
+    if (riskyMmsiSet.has(v.mmsi)) return RISK_COLOR;
+    return DEFAULT_COLOR;
+  }
+  {
+    risks.map((r) => (
+      <Polyline
+        key={`${r.vesselA.mmsi}-${r.vesselB.mmsi}`}
+        positions={[
+          [r.vesselA.lat, r.vesselA.lon],
+          [r.vesselB.lat, r.vesselB.lon],
+        ]}
+        pathOptions={{ color: "#dc2626", weight: 2, dashArray: "6 6" }}
+      />
+    ));
+  }
   return (
     <>
-      <VesselDrawer vessel={selectedVessel} onClose={() => setSelectedMmsi(null)} />
-      <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} style={{ height: '100vh', width: '100%' }} ref={mapRef}>
+      <VesselDrawer
+        vessel={selectedVessel}
+        onClose={() => setSelectedMmsi(null)}
+      />
+      <MapContainer
+        center={DEFAULT_CENTER}
+        zoom={DEFAULT_ZOOM}
+        style={{ height: "100vh", width: "100%" }}
+        ref={mapRef}
+      >
         <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
+          attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapClickDeselect onDeselect={() => setSelectedMmsi(null)} />
         {vessels.map((v) => {
-          const rotation = (v.heading != null && v.heading !== 511) ? v.heading : (v.cog ?? 0);
+          const rotation =
+            v.heading != null && v.heading !== 511 ? v.heading : (v.cog ?? 0);
           const isFocused = v.mmsi === selectedMmsi;
+
           return (
             <Marker
               key={v.mmsi}
               position={[v.lat, v.lon]}
-              icon={createShipIcon(rotation, isFocused ? FOCUSED_COLOR : DEFAULT_COLOR)}
+              icon={createShipIcon(rotation, colorFor(v, isFocused))}
               eventHandlers={{ click: () => setSelectedMmsi(v.mmsi) }}
             >
               <Tooltip direction="top" offset={[0, -12]}>
-                <strong>{v.name || 'Unknown vessel'}</strong><br />
-                MMSI: {v.mmsi}<br />
+                <strong>{v.name || "Unknown vessel"}</strong>
+                <br />
+                MMSI: {v.mmsi}
+                <br />
                 {v.lat.toFixed(4)}, {v.lon.toFixed(4)}
               </Tooltip>
             </Marker>
