@@ -13,7 +13,7 @@ import { useMemo } from "react";
 import { useCollisionRisks } from "../hooks/useCollisionRisks";
 import { Polyline } from "react-leaflet";
 
-const DEFAULT_CENTER = [1.29, 103.85];
+const DEFAULT_CENTER = [30.0522, -118.2437];
 const DEFAULT_ZOOM = 6;
 const DEFAULT_COLOR = "#2563eb"; // normal ship color
 const FOCUSED_COLOR = "#16f9ee"; // orange — the selected vessel
