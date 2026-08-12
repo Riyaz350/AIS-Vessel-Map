@@ -13,6 +13,10 @@ export default function AICommandBar({ vesselMapRef }) {
   const [feedback, setFeedback] = useState("");
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
+  const transcriptRef = useRef(""); // latest recognized text, used once silence timer fires
+  const silenceTimerRef = useRef(null); // debounce timer giving the user a beat to keep talking
+
+  const SILENCE_DELAY_MS = 2000;
 
   if (!isWebGPUAvailable()) {
     return (
@@ -78,14 +82,38 @@ export default function AICommandBar({ vesselMapRef }) {
 
     const recognition = new SpeechRecognitionAPI();
     recognition.lang = "en-US";
-    recognition.continuous = false;
+    // Keep the session open across natural pauses instead of ending after the
+    // first phrase — we handle "are they done talking?" ourselves below, so
+    // someone can pause and then add more (e.g. "focus on mmsi 235012345"
+    // ... pause ... "actually wait, 235012399") before it submits.
+    recognition.continuous = true;
     recognition.interimResults = true; // fire repeatedly as words come in, not just once at the end
 
-    recognition.onstart = () => setListening(true);
-    recognition.onend = () => setListening(false);
+    function clearSilenceTimer() {
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+    }
+
+    recognition.onstart = () => {
+      transcriptRef.current = "";
+      setListening(true);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+      clearSilenceTimer();
+      const finalText = transcriptRef.current;
+      transcriptRef.current = "";
+      if (finalText.trim()) {
+        runCommand(finalText); // submit whatever was captured once the session actually ends
+      }
+    };
+
     recognition.onerror = (e) => {
       console.warn("[Voice] recognition error:", e.error);
-      setListening(false);
+      clearSilenceTimer();
       const messages = {
         "no-speech": "Didn't catch that — try again.",
         "audio-capture": "No microphone found.",
@@ -93,6 +121,8 @@ export default function AICommandBar({ vesselMapRef }) {
         network: "Voice recognition needs an internet connection.",
       };
       setFeedback(messages[e.error] || "Voice input failed — try again.");
+      // onend fires right after onerror and will handle setListening(false)
+      // and submitting anything already captured.
     };
 
     recognition.onresult = (event) => {
@@ -114,10 +144,19 @@ export default function AICommandBar({ vesselMapRef }) {
       // get glued back together, while leaving normal word spacing alone.
       transcript = transcript.replace(/(\d)\s+(?=\d)/g, "$1");
 
+      transcriptRef.current = transcript;
       setText(transcript); // updates on every interim chunk, not just at the end
 
+      // Any new speech — interim or final — means the user is still going,
+      // so cancel any pending "they're done" timer and start fresh.
+      clearSilenceTimer();
+
       if (isFinal) {
-        runCommand(transcript); // only submit once the phrase is actually finished
+        // Give them SILENCE_DELAY_MS to keep adding to the command before
+        // we actually stop listening and submit it.
+        silenceTimerRef.current = setTimeout(() => {
+          recognitionRef.current?.stop(); // triggers onend, which submits
+        }, SILENCE_DELAY_MS);
       }
     };
 
