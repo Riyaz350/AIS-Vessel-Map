@@ -107,6 +107,13 @@ export default function AICommandBar({ vesselMapRef }) {
         if (event.results[i].isFinal) isFinal = true;
       }
 
+      // Chrome's recognizer often splits a spoken number (e.g. an MMSI)
+      // across multiple result chunks, each prefixed with its own leading
+      // space, which leaves a gap in the middle of the number. Collapse
+      // whitespace that sits directly between two digits so split numbers
+      // get glued back together, while leaving normal word spacing alone.
+      transcript = transcript.replace(/(\d)\s+(?=\d)/g, "$1");
+
       setText(transcript); // updates on every interim chunk, not just at the end
 
       if (isFinal) {
