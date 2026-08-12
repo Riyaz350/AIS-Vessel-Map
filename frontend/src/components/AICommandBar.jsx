@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { parseCommand } from "../lib/aiCommandParser";
 import { isWebGPUAvailable } from "../lib/aiEngine";
+import { geocodeLocation } from '../lib/geocode';
 
 const SpeechRecognitionAPI =
   typeof window !== "undefined" &&
@@ -50,7 +51,21 @@ export default function AICommandBar({ vesselMapRef }) {
             ? `Focused on ${result.vessel.name || "vessel"} (MMSI ${result.vessel.mmsi})`
             : `No vessel found for that ${command.identifierType.toUpperCase()}.`,
         );
-      } else if (command.action === "clear_selection") {
+      } else if (command.action === 'focus_location') {
+        try {
+          const place = await geocodeLocation(command.locationName);
+          if (place) {
+            vesselMapRef.current?.focusLocation(place.bounds);
+            setFeedback(`Focused on ${place.displayName}`);
+          } else {
+            setFeedback(`Couldn't find a location matching "${command.locationName}".`);
+          }
+        } catch (err) {
+          console.error('[Geocode] lookup failed:', err);
+          setFeedback('Location lookup failed — check your internet connection.');
+        }
+      }
+      else if (command.action === "clear_selection") {
         vesselMapRef.current?.clearSelection();
         setFeedback("Selection cleared.");
       } else {

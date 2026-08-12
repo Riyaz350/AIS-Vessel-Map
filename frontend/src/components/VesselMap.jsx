@@ -83,6 +83,14 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
         mapRef.current.flyTo([target.lat, target.lon], 10, { duration: 1.5 });
       return { found: true, vessel: target };
     },
+    focusLocation(bounds) {
+    if (mapRef.current && bounds) {
+      // flyToBounds is Leaflet's animated version of fitBounds — smoothly
+      // pans/zooms until the whole bounding box is visible, with a bit of
+      // padding so edges of the region aren't flush against the screen edge.
+      mapRef.current.flyToBounds(bounds, { padding: [40, 40], duration: 1.5 });
+    }
+  },
     clearSelection() {
       setSelectedMmsi(null); // AI "clear_selection" reverts color the same way as any other deselect
     },

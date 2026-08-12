@@ -13,7 +13,7 @@ const COMMAND_SCHEMA = {
     action: {
       type: "string",
 
-      enum: ["focus_vessel", "clear_selection", "unknown"],
+      enum: ["focus_vessel", "clear_selection", 'focus_location', "unknown"],
     },
 
     identifierType: {
@@ -23,9 +23,10 @@ const COMMAND_SCHEMA = {
     },
 
     identifier: { type: "string" },
+    locationName: { type: 'string' },
   },
 
-  required: ["action", "identifierType", "identifier"],
+  required: ["action", "identifierType", 'identifier', 'locationName'],
 };
 
 // '/no_think' disables Qwen3's chain-of-thought reasoning mode for this
@@ -34,34 +35,25 @@ const COMMAND_SCHEMA = {
 
 // skipping it makes responses noticeably faster.
 
-const SYSTEM_PROMPT = `You are a command parser for a ship-tracking map application. /no_think 
+const SYSTEM_PROMPT = `You are a command parser for a ship-tracking map application. /no_think
+Extract the user's intent into JSON only, matching this exact shape:
+{ "action": "focus_vessel" | "focus_location" | "clear_selection" | "unknown",
+  "identifierType": "mmsi" | "imo" | "none",
+  "identifier": "<the vessel number as a string, or empty string>",
+  "locationName": "<a place name, or empty string>" }
 
-Extract the user's intent into JSON only, matching this exact shape: 
-
-{ "action": "focus_vessel" | "clear_selection" | "unknown", 
-
-  "identifierType": "mmsi" | "imo" | "none", 
-
-  "identifier": "<the number as a string, or empty string" } 
-
-  
-
-Rules: 
-
-- If the user asks to find, show, focus on, go to, or track a vessel by 
-
-  MMSI (a 9-digit number) or IMO (typically a 7-digit number, sometimes 
-
-  written like 'IMO 9321483'), set action to "focus_vessel" and fill in 
-
-  identifierType and identifier accordingly. 
-
-- If the user asks to clear, deselect, or close the vessel details, 
-
-  set action to "clear_selection" and identifierType to "none". 
-
-- If the request doesn't match either case, set action to "unknown". 
-
+Rules:
+- If the user asks to find, show, focus on, go to, or track a VESSEL by
+  MMSI (a 9-digit number) or IMO (typically a 7-digit number, sometimes
+  written like 'IMO 9321483'), set action to "focus_vessel" and fill in
+  identifierType and identifier. Leave locationName empty.
+- If the user asks to focus on, zoom to, show, or go to a PLACE (a country,
+  city, port, sea, strait, or region — find that locations latitute and longitude),
+  set action to "focus_location", set locationName to that place name exactly as the
+  user said it, and leave identifierType as "none" and identifier as "".
+- If the user asks to clear, deselect, or close the vessel details, set
+  action to "clear_selection", identifierType to "none", locationName to "".
+- If the request doesn't match any of these, set action to "unknown".
 - Output ONLY the JSON object. No explanation, no markdown fences.`;
 
 export async function parseCommand(userText, onProgress) {
@@ -92,6 +84,6 @@ export async function parseCommand(userText, onProgress) {
   } catch (err) {
     console.warn("[AI] Failed to parse model output as JSON:", raw, err);
 
-    return { action: "unknown", identifierType: "none", identifier: "" };
+    return { action: "unknown", identifierType: "none", identifier: "", locationName: '' };
   }
 }
