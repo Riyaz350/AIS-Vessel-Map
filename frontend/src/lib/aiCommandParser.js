@@ -47,9 +47,8 @@ Rules:
   MMSI (a 9-digit number) or IMO (typically a 7-digit number, sometimes
   written like 'IMO 9321483'), set action to "focus_vessel" and fill in
   identifierType and identifier. Leave locationName empty.
-- If the user asks to focus on, zoom to, show, or go to a PLACE (a country,
-  city, port, sea, strait, or region — find that locations latitute and longitude),
-  set action to "focus_location", set locationName to that place name exactly as the
+- If the user asks to focus on, zoom to, show, or go to a PLACE set action to
+  "focus_location", set locationName to that place name exactly as the
   user said it, and leave identifierType as "none" and identifier as "".
 - If the user asks to clear, deselect, or close the vessel details, set
   action to "clear_selection", identifierType to "none", locationName to "".
