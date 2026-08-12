@@ -33,9 +33,31 @@ function createShipIcon(rotation = 0, color = DEFAULT_COLOR) {
   });
 }
 
-// Leaflet marker clicks don't bubble up to the map's own click event (they
-// stop propagation internally), so this only fires for clicks on open water
-// / land — exactly "clicked elsewhere" — never for clicks on a ship itself.
+// createShipIcon() only depends on rotation + color, so it's safe to cache
+// at module scope (outside any component). Without this, every websocket
+// update re-renders VesselMap and builds fresh L.divIcon objects for ALL
+// vessels, forcing react-leaflet to recreate marker DOM nodes even when
+// nothing about them changed — which can swallow a click that lands
+// mid-swap. This intentionally lives outside the component: mutating a ref
+// during render (as an in-component cache would require) trips React's
+// "don't access refs during render" rule.
+const shipIconCache = new Map();
+function getShipIcon(rotation, color) {
+  const key = `${Math.round(rotation)}|${color}`;
+  let icon = shipIconCache.get(key);
+  if (!icon) {
+    icon = createShipIcon(rotation, color);
+    shipIconCache.set(key, icon);
+  }
+  return icon;
+}
+
+// NOTE: Leaflet markers have bubblingMouseEvents enabled by default, which
+// means a marker click ALSO re-fires 'click' on the map itself. We rely on
+// this handler only firing for genuine "clicked elsewhere" (open water/land)
+// clicks, so each Marker below explicitly stops that bubbling in its own
+// click handler — otherwise selecting a vessel gets undone by this same
+// click a moment later.
 function MapClickDeselect({ onDeselect }) {
   useMapEvents({ click: () => onDeselect() });
   return null;
@@ -124,8 +146,16 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
             <Marker
               key={v.mmsi}
               position={[v.lat, v.lon]}
-              icon={createShipIcon(rotation, colorFor(v, isFocused))}
-              eventHandlers={{ click: () => setSelectedMmsi(v.mmsi) }}
+              icon={getShipIcon(rotation, colorFor(v, isFocused))}
+              eventHandlers={{
+                click: (e) => {
+                  // Prevent this click from bubbling up to the map's own
+                  // click handler (MapClickDeselect), which would otherwise
+                  // immediately clear the selection we're about to make.
+                  L.DomEvent.stopPropagation(e);
+                  setSelectedMmsi(v.mmsi);
+                },
+              }}
             >
               <Tooltip direction="top" offset={[0, -12]}>
                 <strong>{v.name || "Unknown vessel"}</strong>
