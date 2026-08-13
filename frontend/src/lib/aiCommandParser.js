@@ -1,4 +1,4 @@
-import { getEngine } from "./aiEngine";
+import { getEngine, resetEngine } from "./aiEngine";
 
 // The exact shape every AI response must match. WebLLM enforces this
 
@@ -13,7 +13,7 @@ const COMMAND_SCHEMA = {
     action: {
       type: "string",
 
-      enum: ["focus_vessel", "clear_selection", 'focus_location', "unknown"],
+      enum: ["focus_vessel", "clear_selection", "focus_location", "unknown"],
     },
 
     identifierType: {
@@ -23,10 +23,10 @@ const COMMAND_SCHEMA = {
     },
 
     identifier: { type: "string" },
-    locationName: { type: 'string' },
+    locationName: { type: "string" },
   },
 
-  required: ["action", "identifierType", 'identifier', 'locationName'],
+  required: ["action", "identifierType", "identifier", "locationName"],
 };
 
 // '/no_think' disables Qwen3's chain-of-thought reasoning mode for this
@@ -35,54 +35,99 @@ const COMMAND_SCHEMA = {
 
 // skipping it makes responses noticeably faster.
 
-const SYSTEM_PROMPT = `You are a command parser for a ship-tracking map application. /no_think
-Extract the user's intent into JSON only, matching this exact shape:
-{ "action": "focus_vessel" | "focus_location" | "clear_selection" | "unknown",
-  "identifierType": "mmsi" | "imo" | "none",
-  "identifier": "<the vessel number as a string, or empty string>",
-  "locationName": "<a place name, or empty string>" }
+const SYSTEM_PROMPT = `You are a command parser for a ship-tracking map application. /no_think 
 
-Rules:
-- If the user asks to find, show, focus on, go to, or track a VESSEL by
-  MMSI (a 9-digit number) or IMO (typically a 7-digit number, sometimes
-  written like 'IMO 9321483'), set action to "focus_vessel" and fill in
-  identifierType and identifier. Leave locationName empty.
-- If the user asks to focus on, zoom to, show, or go to a PLACE set action to
-  "focus_location", set locationName to that place name exactly as the
-  user said it, and leave identifierType as "none" and identifier as "".
-- If the user asks to clear, deselect, or close the vessel details, set
-  action to "clear_selection", identifierType to "none", locationName to "".
-- If the request doesn't match any of these, set action to "unknown".
+The user may write in English or Bengali (বাংলা) script, including Bengali 
+
+numerals (০ ১ ২ ৩ ৪ ৫ ৬ ৭ ৮ ৯). Understand the command regardless of 
+
+language or script. 
+
+Extract the user's intent into JSON only, matching this exact shape: 
+
+{ "action": "focus_vessel" | "focus_location" | "clear_selection" | "unknown", 
+
+  "identifierType": "mmsi" | "imo" | "none", 
+
+  "identifier": "<the vessel number as a string, using standard Arabic 
+
+    digits 0-9 even if the user wrote Bengali digits, or empty string>", 
+
+  "locationName": "<a place name in English if you know the English name, 
+
+    otherwise transliterated, or empty string>" } 
+
+  
+
+Rules: 
+
+- If the user asks to find, show, focus on, go to, or track a VESSEL by 
+
+  MMSI (a 9-digit number) or IMO (typically a 7-digit number), set action 
+
+  to "focus_vessel" and fill in identifierType and identifier, always as 
+
+  standard Arabic digits regardless of what script the user typed them in. 
+
+- If the user asks to focus on, zoom to, show, or go to a PLACE (a 
+
+  country, city, port, sea, strait, or region — in English or Bengali), set action to 
+
+  "focus_location" and set locationName to the place's common English 
+
+  name if you know it , so it can be looked up on a 
+
+  standard map database. Leave identifierType as "none" and identifier 
+
+  as "". 
+
+- If the user asks to clear, deselect, or close the vessel details 
+
+  (in either language), set action to "clear_selection". 
+
+- If the request doesn't match any of these, set action to "unknown". 
+
 - Output ONLY the JSON object. No explanation, no markdown fences.`;
 
 export async function parseCommand(userText, onProgress) {
   const engine = await getEngine(onProgress);
+  return runOnce(engine, userText, false, onProgress);
+}
 
+async function runOnce(engine, userText, isRetry, onProgress) {
   const reply = await engine.chat.completions.create({
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
-
       { role: "user", content: userText },
     ],
-
     response_format: {
       type: "json_object",
-
       schema: JSON.stringify(COMMAND_SCHEMA),
     },
-
-    temperature: 0, // deterministic — we want extraction, not creativity
+    temperature: 0,
   });
 
   const raw = reply.choices[0]?.message?.content ?? "";
 
   try {
-    const parsed = JSON.parse(raw);
-
-    return parsed;
+    return JSON.parse(raw);
   } catch (err) {
     console.warn("[AI] Failed to parse model output as JSON:", raw, err);
 
-    return { action: "unknown", identifierType: "none", identifier: "", locationName: '' };
+    if (!isRetry) {
+      // Empty output usually means the engine's internal state is stuck.
+      // Tear it down completely and get a fresh instance, rather than
+      // trying to nurse the same corrupted one back to health.
+      await resetEngine();
+      const freshEngine = await getEngine(onProgress);
+      return runOnce(freshEngine, userText, true, onProgress);
+    }
+
+    return {
+      action: "unknown",
+      identifierType: "none",
+      identifier: "",
+      locationName: "",
+    };
   }
 }

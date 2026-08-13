@@ -17,5 +17,11 @@ async function upsertVessel(data) {
     { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
   );
 }
-
-module.exports = { upsertVessel };
+async function updateVesselName(mmsi, name) {
+  return Vessel.findOneAndUpdate(
+    { mmsi },
+    { $set: { name } },
+    { upsert: false, returnDocument: 'after' } // only patch vessels Portvision already reported
+  );
+}
+module.exports = { upsertVessel, updateVesselName };
