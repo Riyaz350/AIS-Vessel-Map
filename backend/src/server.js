@@ -9,6 +9,16 @@ const { decodeSentence } = require("./ais/decoder");
 const initSockets = require("./sockets");
 const AisStreamConnection = require("./ais/aisstream");
 const { upsertVessel, updateVesselName } = require("./services/vesselService");
+process.on("unhandledRejection", (reason) => {
+  console.error("[Server] Unhandled promise rejection:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("[Server] Uncaught exception:", err);
+  // Deliberately not calling process.exit() here -- log and keep running,
+  // since a hard crash on every transient network hiccup is worse than
+  // staying up in a slightly imperfect state for something this small.
+});
 const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json());
