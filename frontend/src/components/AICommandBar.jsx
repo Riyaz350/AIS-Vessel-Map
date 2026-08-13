@@ -266,19 +266,14 @@ export default function AICommandBar({ vesselMapRef }) {
 
     }; 
 
-    recognition.onresult = (event) => { 
-
-      let transcript = ''; 
-
-      let isFinal = false; 
-
-      for (let i = 0; i < event.results.length; i++) { 
-
-        transcript += event.results[i][0].transcript; 
-
-        if (event.results[i].isFinal) isFinal = true; 
-
-      } 
+    recognition.onresult = (event) => {
+  let transcript = '';
+  let isFinal = false;
+  for (let i = 0; i < event.results.length; i++) {
+    transcript += event.results[i][0].transcript;
+    if (event.results[i].isFinal) isFinal = true;
+  }
+   
 
       setText(transcript); 
 

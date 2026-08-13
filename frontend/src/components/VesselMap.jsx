@@ -12,6 +12,7 @@ import VesselDrawer from "./VesselDrawer";
 import { useMemo } from "react";
 import { useCollisionRisks } from "../hooks/useCollisionRisks";
 import { Polyline } from "react-leaflet";
+import { normalizeDigits } from "../lib/normalizeIdentifier";
 
 const DEFAULT_CENTER = [30.0522, -118.2437];
 const DEFAULT_ZOOM = 6;
@@ -72,25 +73,47 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
 
   useImperativeHandle(ref, () => ({
     focusVessel(identifier) {
+      const rawId = identifier.mmsi ?? identifier.imo;
+      const cleanId = normalizeDigits(rawId);
+
+      console.debug("[focusVessel] looking for", {
+        rawId,
+        cleanId,
+        type: identifier.mmsi ? "mmsi" : "imo",
+      });
+
+      if (!cleanId) return { found: false };
+
       const target = vessels.find((v) =>
         identifier.mmsi
-          ? v.mmsi === Number(identifier.mmsi)
-          : v.imo === Number(identifier.imo),
+          ? String(v.mmsi) === cleanId
+          : String(v.imo) === cleanId,
       );
-      if (!target) return { found: false };
+
+      if (!target) {
+        console.debug(
+          "[focusVessel] not found. Known mmsi values:",
+          vessels.map((v) => v.mmsi),
+        );
+        return { found: false };
+      }
+
       setSelectedMmsi(target.mmsi);
       if (mapRef.current)
         mapRef.current.flyTo([target.lat, target.lon], 10, { duration: 1.5 });
       return { found: true, vessel: target };
     },
     focusLocation(bounds) {
-    if (mapRef.current && bounds) {
-      // flyToBounds is Leaflet's animated version of fitBounds — smoothly
-      // pans/zooms until the whole bounding box is visible, with a bit of
-      // padding so edges of the region aren't flush against the screen edge.
-      mapRef.current.flyToBounds(bounds, { padding: [40, 40], duration: 1.5 });
-    }
-  },
+      if (mapRef.current && bounds) {
+        // flyToBounds is Leaflet's animated version of fitBounds — smoothly
+        // pans/zooms until the whole bounding box is visible, with a bit of
+        // padding so edges of the region aren't flush against the screen edge.
+        mapRef.current.flyToBounds(bounds, {
+          padding: [40, 40],
+          duration: 1.5,
+        });
+      }
+    },
     clearSelection() {
       setSelectedMmsi(null); // AI "clear_selection" reverts color the same way as any other deselect
     },
