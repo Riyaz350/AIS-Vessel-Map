@@ -19,7 +19,7 @@ const COMMAND_SCHEMA = {
     identifierType: {
       type: "string",
 
-      enum: ["mmsi", "imo", "none"],
+      enum: ["mmsi", "imo", "none", "name"],
     },
 
     identifier: { type: "string" },
@@ -47,7 +47,7 @@ Extract the user's intent into JSON only, matching this exact shape:
 
 { "action": "focus_vessel" | "focus_location" | "clear_selection" | "unknown", 
 
-  "identifierType": "mmsi" | "imo" | "none", 
+  "identifierType": "mmsi" | "imo" | "name" | "none", 
 
   "identifier": "<the vessel number as a string, using standard Arabic 
 
@@ -68,6 +68,10 @@ Rules:
   to "focus_vessel" and fill in identifierType and identifier, always as 
 
   standard Arabic digits regardless of what script the user typed them in. 
+ 
+  - If the user asks to find, show, or focus on a vessel BY NAME, set action to "focus_vessel", identifierType to
+
+  "name", and identifier to the vessel's name exactly as the user said it.
 
 - If the user asks to focus on, zoom to, show, or go to a PLACE (a 
 

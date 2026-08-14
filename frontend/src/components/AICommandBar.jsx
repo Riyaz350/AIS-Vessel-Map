@@ -7,7 +7,7 @@ import { geocodeLocation } from "../lib/geocode";
 import { isWebGPUAvailable } from "../lib/aiEngine";
 // import { spokenDigitsToNumeric } from "../lib/normalizeIdentifier";
 import { collapseDigitSpaces } from "../lib/normalizeIdentifier";
-
+import { normalizeDigits } from "../lib/normalizeIdentifier";
 const SpeechRecognitionAPI =
   typeof window !== "undefined" &&
   (window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -79,24 +79,57 @@ export default function AICommandBar({ vesselMapRef }) {
         setProgressText(report.text || "Loading model...");
       });
 
+      console.debug("[AI] parsed command:", command); // <-- add this line
+
+      if (requestIdRef.current !== myRequestId) return;
       // Stop was pressed while we were waiting -- drop this stale result.
 
       if (requestIdRef.current !== myRequestId) return;
-
       if (command.action === "focus_vessel") {
+        let idType = command.identifierType;
+        const rawIdentifier = command.identifier?.trim() || "";
+
+        // The model sometimes leaves identifierType as "none" even when it
+        // correctly extracted an identifier. Infer the real type from the
+        // value itself rather than trusting identifierType blindly: if it's
+        // purely digits (after normalizing), it's an MMSI/IMO number;
+        // otherwise it's a name.
+        if ((idType === "none" || !idType) && rawIdentifier) {
+          idType = /^\d+$/.test(normalizeDigits(rawIdentifier))
+            ? "mmsi"
+            : "name";
+        }
+
         const identifier =
-          command.identifierType === "imo"
-            ? { imo: command.identifier }
-            : { mmsi: command.identifier }
-            ;
+          idType === "imo"
+            ? { imo: rawIdentifier }
+            : idType === "name"
+              ? { name: rawIdentifier }
+              : { mmsi: rawIdentifier };
 
         const result = vesselMapRef.current?.focusVessel(identifier);
 
-        setFeedback(
-          result?.found
-            ? `Focused on ${result.vessel.name || "vessel"} (MMSI ${result.vessel.mmsi})`
-            : `No vessel found for that ${command.identifierType.toUpperCase()}.`,
-        );
+        if (result?.found) {
+          setFeedback(
+            `Focused on ${result.vessel.name || "vessel"} (MMSI ${result.vessel.mmsi})`,
+          );
+        } else if (result?.matches?.length > 1) {
+          const preview = result.matches
+            .slice(0, 5)
+            .map((v) => `${v.name} (MMSI ${v.mmsi})`)
+            .join(", ");
+          setFeedback(
+            `Found ${result.matches.length} vessels matching "${rawIdentifier}": ${preview}` +
+              (result.matches.length > 5 ? ", …" : "") +
+              ". Try a more specific name.",
+          );
+        } else {
+          setFeedback(
+            idType === "name"
+              ? `No vessel found named "${rawIdentifier}".`
+              : `No vessel found for that ${idType.toUpperCase()}.`,
+          );
+        }
       } else if (command.action === "focus_location") {
         const place = await geocodeLocation(command.locationName);
 
@@ -168,12 +201,11 @@ export default function AICommandBar({ vesselMapRef }) {
 
     recognition.onstart = () => setListening(true);
 
+    // Voice input — keep original case from the transcript
     recognition.onresult = (event) => {
-      // Any new result (interim or final) means the person is still
-      // talking -- push the auto-stop deadline out another 2 seconds.
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = setTimeout(() => {
-        recognitionRef.current?.stop(); // triggers onend below, which submits
+        recognitionRef.current?.stop();
       }, 2000);
 
       let interim = "";
@@ -205,13 +237,10 @@ export default function AICommandBar({ vesselMapRef }) {
       clearTimeout(silenceTimerRef.current);
       setListening(false);
       const rawFinalText = finalTranscriptRef.current.trim();
-      const finalText = collapseDigitSpaces(rawFinalText);
+      const finalText = collapseDigitSpaces(rawFinalText); // no .toUpperCase() here anymore
 
       console.debug("[Voice] raw transcript:", JSON.stringify(rawFinalText));
-      console.debug(
-        "[Voice] after collapsing digit spaces:",
-        JSON.stringify(finalText),
-      );
+      console.debug("[Voice] after normalization:", JSON.stringify(finalText));
 
       if (finalText) {
         setText(finalText);
@@ -253,7 +282,6 @@ export default function AICommandBar({ vesselMapRef }) {
           style={styles.input}
           disabled={busy}
         />
-
         <button
           type="button"
           onClick={handleMicClick}
@@ -266,7 +294,6 @@ export default function AICommandBar({ vesselMapRef }) {
         >
           {listening ? "● Listening…" : "🎤"}
         </button>
-
         <button type="submit" style={styles.button} disabled={busy}>
           {status === "loading"
             ? "Loading model…"
@@ -274,7 +301,6 @@ export default function AICommandBar({ vesselMapRef }) {
               ? "Thinking…"
               : "Go"}
         </button>
-
         {(busy || listening) && (
           <button type="button" onClick={handleStop} style={styles.stopButton}>
             ■ Stop

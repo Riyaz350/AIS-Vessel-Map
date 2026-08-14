@@ -84,60 +84,41 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
    */
   const namedVessels = useMemo(() => {
     return vessels.filter(
-      (v) =>
-        typeof v.name === "string" &&
-        v.name.trim().length > 0
+      (v) => typeof v.name === "string" && v.name.trim().length > 0,
     );
   }, [vessels]);
 
   const selectedVessel =
-    namedVessels.find(
-      (v) => v.mmsi === selectedMmsi
-    ) || null;
+    namedVessels.find((v) => v.mmsi === selectedMmsi) || null;
 
   useImperativeHandle(ref, () => ({
     focusVessel(identifier) {
-      const rawId = identifier.mmsi ?? identifier.imo;
-      const cleanId = normalizeDigits(rawId);
+      let target = null;
+      let matches = [];
 
-      console.debug("[focusVessel] looking for", {
-        rawId,
-        cleanId,
-        type: identifier.mmsi ? "mmsi" : "imo",
-      });
+      if (identifier.mmsi) {
+        const cleanId = normalizeDigits(identifier.mmsi);
+        target = vessels.find((v) => String(v.mmsi) === cleanId);
+      } else if (identifier.imo) {
+        const cleanId = normalizeDigits(identifier.imo);
+        target = vessels.find((v) => String(v.imo) === cleanId);
+      } else if (identifier.name) {
+        const query = identifier.name.trim().toUpperCase();
+        matches = vessels.filter(
+          (v) => v.name && v.name.toUpperCase().includes(query),
+        ); 
 
-      if (!cleanId) {
-        return { found: false };
+        if (matches.length === 1) target = matches[0];
       }
 
-      const target = namedVessels.find((v) =>
-        identifier.mmsi
-          ? String(v.mmsi) === cleanId
-          : String(v.imo) === cleanId
-      );
-
       if (!target) {
-        console.debug(
-          "[focusVessel] named vessel not found"
-        );
-
-        return { found: false };
+        return { found: false, matches };
       }
 
       setSelectedMmsi(target.mmsi);
-
-      if (mapRef.current) {
-        mapRef.current.flyTo(
-          [target.lat, target.lon],
-          10,
-          { duration: 1.5 }
-        );
-      }
-
-      return {
-        found: true,
-        vessel: target,
-      };
+      if (mapRef.current)
+        mapRef.current.flyTo([target.lat, target.lon], 10, { duration: 1.5 });
+      return { found: true, vessel: target };
     },
 
     focusLocation(bounds) {
@@ -206,9 +187,7 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <MapClickDeselect
-          onDeselect={() => setSelectedMmsi(null)}
-        />
+        <MapClickDeselect onDeselect={() => setSelectedMmsi(null)} />
 
         {/* Collision risk lines */}
         {risks.map((r) => (
@@ -229,21 +208,15 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
         {/* Only render named vessels */}
         {namedVessels.map((v) => {
           const rotation =
-            v.heading != null && v.heading !== 511
-              ? v.heading
-              : (v.cog ?? 0);
+            v.heading != null && v.heading !== 511 ? v.heading : (v.cog ?? 0);
 
-          const isFocused =
-            v.mmsi === selectedMmsi;
+          const isFocused = v.mmsi === selectedMmsi;
 
           return (
             <Marker
               key={v.mmsi}
               position={[v.lat, v.lon]}
-              icon={getShipIcon(
-                rotation,
-                colorFor(v, isFocused)
-              )}
+              icon={getShipIcon(rotation, colorFor(v, isFocused))}
               eventHandlers={{
                 click: (e) => {
                   L.DomEvent.stopPropagation(e);
@@ -251,22 +224,12 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
                 },
               }}
             >
-              <Tooltip
-                direction="top"
-                offset={[0, -12]}
-              >
-                <strong>
-                  {v.name}
-                </strong>
-
+              <Tooltip direction="top" offset={[0, -12]}>
+                <strong>{v.name}</strong>
                 <br />
-
                 MMSI: {v.mmsi}
-
                 <br />
-
-                {v.lat.toFixed(4)},{" "}
-                {v.lon.toFixed(4)}
+                {v.lat.toFixed(4)}, {v.lon.toFixed(4)}
               </Tooltip>
             </Marker>
           );
