@@ -8,6 +8,7 @@ const AisFeedConnection = require("./ais/connection");
 const { decodeSentence } = require("./ais/decoder");
 const initSockets = require("./sockets");
 const AisStreamConnection = require("./ais/aisstream");
+const aisNameCache = require("./ais/aisNameCache");
 const { upsertVessel, updateVesselName } = require("./services/vesselService");
 process.on("unhandledRejection", (reason) => {
   console.error("[Server] Unhandled promise rejection:", reason);
@@ -32,6 +33,24 @@ const io = initSockets(server);
 async function start() {
   await connectDB(process.env.MONGO_URI);
 
+  console.log("[Server] Database connected");
+
+  aisNameCache.connect(process.env.AISSTREAM_API_KEY, async (mmsi, name) => {
+    try {
+      console.log(`[Server] AISStream name received: ${mmsi} -> ${name}`);
+
+      const vessel = await updateVesselName(mmsi, name);
+
+      if (vessel) {
+        console.log(`[Server] MongoDB updated: ${mmsi} -> ${vessel.name}`);
+
+        io.emit("vessel:update", vessel);
+      }
+    } catch (err) {
+      console.error("[Server] Failed to update vessel name:", err);
+    }
+  });
+
   const feed = new AisFeedConnection({
     host: process.env.AIS_FEED_HOST,
     port: Number(process.env.AIS_FEED_PORT),
@@ -39,44 +58,25 @@ async function start() {
 
   feed.on("sentence", async (line) => {
     const decoded = decodeSentence(line);
+
     if (!decoded) return;
+
+    decoded?.name && console.log(`This ${decoded?.mmsi} has a name`, decoded?.name);
+    // console.log(decoded);
     const vessel = await upsertVessel(decoded);
-    if (vessel) io.emit("vessel:update", vessel);
+
+    if (vessel) {
+      io.emit("vessel:update", vessel);
+    }
   });
-
-  feed.connect();
-  const aisStream = new AisStreamConnection({
-    apiKey: process.env.AISSTREAM_API_KEY,
-    onShipName: async (mmsi, name) => {
-      console.log(
-        `[Server] Received vessel name update | MMSI: ${mmsi} | Name: "${name}"`,
-      );
-
-      try {
-        const vessel = await updateVesselName(mmsi, name);
-
-        if (vessel) {
-          console.log(
-            `[Server] Vessel name updated successfully | MMSI: ${mmsi} | Name: "${vessel.name}"`,
-          );
-
-          io.emit("vessel:update", vessel);
-        } else {
-          console.warn(
-            `[Server] Could not update vessel | MMSI: ${mmsi} | Name: "${name}"`,
-          );
-        }
-      } catch (err) {
-        console.error(
-          `[Server] Failed to update vessel name | MMSI: ${mmsi} | Name: "${name}"`,
-          err,
-        );
-      }
-    },
-  });
-  aisStream.connect();
   const port = process.env.PORT || 5000;
-  server.listen(port, () => console.log(`[Server] Listening on ${port}`));
+
+  server.listen(port, () => {
+    console.log(`[Server] Listening on port ${port}`);
+  });
+  feed.connect();
+
+  // ...
 }
 
 start().catch((err) => {

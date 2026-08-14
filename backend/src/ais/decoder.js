@@ -1,34 +1,107 @@
-const { AisDecode } = require('ggencoder');
+const { AisDecode } = require("ggencoder");
+const aisNameCache = require("./aisNameCache");
+const { updateVesselName } = require("../services/vesselService");
 
-// Multi-part messages (type 5, static/voyage data) arrive as two
-// sentences sharing a sequence id. ggencoder needs a PLAIN OBJECT
-// (not a Map) to hold in-progress fragments between calls, or it
-// throws 'A session object is required...' on every such message.
 const pendingParts = {};
 
 function decodeSentence(rawLine) {
-    try {
-        const decoded = new AisDecode(rawLine, pendingParts);
-        if (!decoded || !decoded.valid) return null;
+  try {
+    const decoded = new AisDecode(rawLine, pendingParts);
 
-        // console.log(decoded);
-
-        return {
-            mmsi: decoded.mmsi,
-            imo: decoded.imo || undefined, // IMO number, from static data messages 
-            name: decoded.shipname ? decoded.shipname.trim() : undefined,
-            lat: decoded.lat,
-            lon: decoded.lon,
-            sog: decoded.sog,          // Speed Over Ground (knots)
-            cog: decoded.cog,          // Course Over Ground (degrees)
-            heading: decoded.hdg,      // Heading (degrees)
-            vesselType: decoded.cargo, // numeric AIS ship/cargo type code
-            lastUpdated: new Date(),
-        };
-    } catch (err) {
-        console.warn('[AIS] Failed to decode sentence:', rawLine, err);
-        return null;
+    if (!decoded || !decoded.valid) {
+      return null;
     }
+
+    /*
+     * Portvision AIS name
+     */
+    const portvisionName = decoded.shipname
+      ? decoded.shipname.trim()
+      : undefined;
+
+    /*
+     * If Portvision provides a valid vessel name,
+     * immediately update MongoDB using the MMSI.
+     */
+    if (portvisionName && decoded.mmsi) {
+      console.log(
+        `[DECODER] Portvision name found | MMSI=${decoded.mmsi} | NAME=${portvisionName}`
+      );
+
+      updateVesselName(decoded.mmsi, portvisionName)
+        .catch((err) => {
+          console.error(
+            `[DECODER] Failed to update vessel name | MMSI=${decoded.mmsi}`,
+            err
+          );
+        });
+    }
+
+    /*
+     * Check AISStream name cache if Portvision
+     * does not provide a name.
+     */
+    const cachedName = decoded.mmsi
+      ? aisNameCache.getName(decoded.mmsi)
+      : undefined;
+
+    if (cachedName) {
+      console.log(
+        `[DECODER] AISStream cached name | MMSI=${decoded.mmsi} | NAME=${cachedName}`
+      );
+    }
+
+    /*
+     * Prefer Portvision name.
+     * Fall back to AISStream cached name.
+     */
+    const shipName =
+      portvisionName ||
+      cachedName ||
+      undefined;
+
+    /*
+     * MMSI and position are required.
+     * Name is optional.
+     */
+    if (
+      !decoded.mmsi ||
+      decoded.lat == null ||
+      decoded.lon == null
+    ) {
+      return null;
+    }
+
+    return {
+      mmsi: decoded.mmsi,
+
+      imo: decoded.imo || undefined,
+
+      name: shipName,
+
+      lat: decoded.lat,
+      lon: decoded.lon,
+
+      sog: decoded.sog,
+      cog: decoded.cog,
+      heading: decoded.hdg,
+
+      vesselType: decoded.cargo,
+
+      lastUpdated: new Date(),
+    };
+
+  } catch (err) {
+    console.warn(
+      "[AIS] Failed to decode sentence:",
+      rawLine,
+      err
+    );
+
+    return null;
+  }
 }
 
-module.exports = { decodeSentence };
+module.exports = {
+  decodeSentence,
+};

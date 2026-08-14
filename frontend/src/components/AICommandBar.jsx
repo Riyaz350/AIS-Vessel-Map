@@ -5,7 +5,7 @@ import { parseCommand } from "../lib/aiCommandParser";
 import { geocodeLocation } from "../lib/geocode";
 
 import { isWebGPUAvailable } from "../lib/aiEngine";
-import { spokenDigitsToNumeric } from "../lib/normalizeIdentifier";
+// import { spokenDigitsToNumeric } from "../lib/normalizeIdentifier";
 import { collapseDigitSpaces } from "../lib/normalizeIdentifier";
 
 const SpeechRecognitionAPI =
@@ -87,7 +87,8 @@ export default function AICommandBar({ vesselMapRef }) {
         const identifier =
           command.identifierType === "imo"
             ? { imo: command.identifier }
-            : { mmsi: command.identifier };
+            : { mmsi: command.identifier }
+            ;
 
         const result = vesselMapRef.current?.focusVessel(identifier);
 
