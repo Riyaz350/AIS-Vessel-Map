@@ -24,9 +24,7 @@ function decodeSentence(rawLine) {
      * immediately update MongoDB using the MMSI.
      */
     if (portvisionName && decoded.mmsi) {
-      console.log(
-        `[DECODER] Portvision name found | MMSI=${decoded.mmsi} | NAME=${portvisionName}`
-      );
+       
 
       updateVesselName(decoded.mmsi, portvisionName)
         .catch((err) => {

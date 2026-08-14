@@ -69,9 +69,9 @@ Rules:
 
   standard Arabic digits regardless of what script the user typed them in. 
  
-  - If the user asks to find, show, or focus on a vessel BY NAME, set action to "focus_vessel", identifierType to
+- If the user asks to find, show, or focus on a vessel BY NAME, set action to "focus_vessel", identifierType to
 
-  "name", and identifier to the vessel's name exactly as the user said it.
+"name", and identifier to the vessel's name exactly as the user said it but with all capital letter.
 
 - If the user asks to focus on, zoom to, show, or go to a PLACE (a 
 

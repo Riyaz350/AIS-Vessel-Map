@@ -42,9 +42,7 @@ async function upsertVessel(data) {
     update.vesselType = data.vesselType;
   }
 
-  console.log(
-    `[DB] Updating vessel | MMSI=${data.mmsi}`
-  );
+  
 
   const vessel = await Vessel.findOneAndUpdate(
     {
@@ -113,9 +111,7 @@ async function updateVesselName(mmsi, name) {
     return existingVessel;
   }
 
-  console.log(
-    `[DB] Updating vessel name | MMSI=${mmsi} | NAME=${cleanName}`
-  );
+   
 
   const vessel = await Vessel.findOneAndUpdate(
     {
