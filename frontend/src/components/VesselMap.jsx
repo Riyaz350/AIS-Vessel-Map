@@ -6,7 +6,6 @@ import { useCollisionRisks } from '../hooks/useCollisionRisks';
 import { normalizeDigits } from '../lib/normalizeIdentifier';
 import VesselDrawer from './VesselDrawer';
 import VesselNameDropdown from './VesselNameDropdown';
-import CollisionRiskBanner from './CollisionRiskBanner';
 
 const DEFAULT_CENTER = [30.0522, -118.2437];
 const DEFAULT_ZOOM = 6;
@@ -104,10 +103,7 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
         }}
       />
 
-      <CollisionRiskBanner
-        risks={risks}
-        onSelectPair={(r) => selectVesselAndFly(r.vesselA)}
-      />
+     
 
       <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} style={{ height: '100vh', width: '100%' }} ref={mapRef}>
         <TileLayer
