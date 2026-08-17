@@ -34,11 +34,17 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
   const [selectedMmsi, setSelectedMmsi] = useState(null);
   const mapRef = useRef(null);
 
-  const risks = useCollisionRisks(vessels, { thresholdNm: 1, maxLookaheadMinutes: 20 });
+  // Only vessels with a real, resolved name are shown on the map at all --
+  // this must be applied before anything else reads from "vessels" for
+  // rendering, so the marker list, the drawer, and colorFor() all agree
+  // on the same visible set.
+  const namedVessels = vessels.filter((v) => v.name && v.name.trim().length > 0);
+
+  const risks = useCollisionRisks(namedVessels, { thresholdNm: 1, maxLookaheadMinutes: 20 });
   const riskyMmsiSet = new Set();
   risks.forEach((r) => { riskyMmsiSet.add(r.vesselA.mmsi); riskyMmsiSet.add(r.vesselB.mmsi); });
 
-  const selectedVessel = vessels.find((v) => v.mmsi === selectedMmsi) || null;
+  const selectedVessel = namedVessels.find((v) => v.mmsi === selectedMmsi) || null;
 
   function colorFor(v, isFocused) {
     if (isFocused) return FOCUSED_COLOR;
@@ -46,10 +52,6 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
     return DEFAULT_COLOR;
   }
 
-  // This is the ONE function that both selects a vessel for the drawer
-  // AND flies the map to it. Every entry point (marker click, dropdown
-  // pick, AI focus) should call this exact function, so there's only
-  // ever one place that decides what "focusing a vessel" means.
   function selectVesselAndFly(vessel) {
     if (!vessel) return;
     setSelectedMmsi(vessel.mmsi);
@@ -65,13 +67,13 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
 
       if (identifier.mmsi) {
         const cleanId = normalizeDigits(identifier.mmsi);
-        target = vessels.find((v) => String(v.mmsi) === cleanId);
+        target = namedVessels.find((v) => String(v.mmsi) === cleanId);
       } else if (identifier.imo) {
         const cleanId = normalizeDigits(identifier.imo);
-        target = vessels.find((v) => String(v.imo) === cleanId);
+        target = namedVessels.find((v) => String(v.imo) === cleanId);
       } else if (identifier.name) {
         const query = identifier.name.trim().toUpperCase();
-        matches = vessels.filter((v) => v.name && v.name.toUpperCase().includes(query));
+        matches = namedVessels.filter((v) => v.name.toUpperCase().includes(query));
         if (matches.length === 1) target = matches[0];
       }
 
@@ -94,10 +96,10 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
       <VesselDrawer vessel={selectedVessel} onClose={() => setSelectedMmsi(null)} />
 
       <VesselNameDropdown
-        vessels={vessels}
+        vessels={namedVessels}
         selectedMmsi={selectedMmsi}
         onSelect={(mmsi) => {
-          const target = vessels.find((v) => v.mmsi === mmsi);
+          const target = namedVessels.find((v) => v.mmsi === mmsi);
           selectVesselAndFly(target);
         }}
       />
@@ -113,7 +115,7 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapClickDeselect onDeselect={() => setSelectedMmsi(null)} />
-        {vessels.map((v) => {
+        {namedVessels.map((v) => {
           const rotation = (v.heading != null && v.heading !== 511) ? v.heading : (v.cog ?? 0);
           const isFocused = v.mmsi === selectedMmsi;
           return (
@@ -124,7 +126,7 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
               eventHandlers={{ click: () => selectVesselAndFly(v) }}
             >
               <Tooltip direction="top" offset={[0, -12]}>
-                <strong>{v.name || 'Unknown vessel'}</strong><br />
+                <strong>{v.name}</strong><br />
                 MMSI: {v.mmsi}<br />
                 {v.lat.toFixed(4)}, {v.lon.toFixed(4)}
               </Tooltip>
