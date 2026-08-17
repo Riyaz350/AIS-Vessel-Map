@@ -11,7 +11,7 @@ const DEFAULT_CENTER = [30.0522, -118.2437];
 const DEFAULT_ZOOM = 6;
 const DEFAULT_COLOR = '#2563eb';
 const FOCUSED_COLOR = '#16f9ee';
-const RISK_COLOR = '#dc2626';
+const RISK_COLOR = '#2563eb';
 
 function createShipIcon(rotation = 0, color = DEFAULT_COLOR) {
   const svg = `
