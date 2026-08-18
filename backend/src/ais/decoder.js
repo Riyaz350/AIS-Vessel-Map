@@ -43,11 +43,7 @@ function decodeSentence(rawLine) {
       ? aisNameCache.getName(decoded.mmsi)
       : undefined;
 
-    if (cachedName) {
-      console.log(
-        `[DECODER] AISStream cached name | MMSI=${decoded.mmsi} | NAME=${cachedName}`
-      );
-    }
+    
 
     /*
      * Prefer Portvision name.

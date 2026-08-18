@@ -25,14 +25,16 @@ export function getEngine(onProgress) {
 // starts returning empty responses -- resetChat() alone doesn't reliably
 // clear this state, but a brand-new engine instance always starts clean.
 // Weights are already cached in IndexedDB, so rebuilding is fast.
-export async function resetEngine() {
+export async function resetEngine({ interrupt = false } = {}) {
   if (enginePromise) {
     try {
       const engine = await enginePromise;
-      await engine.unload();
-    } catch (err) {
-      console.log(err.message)
-      // engine may already be unusable -- fine, we're discarding it anyway
+      if (interrupt) {
+        try { engine.interruptGenerate(); } catch (_) { /* not generating -- fine */ }
+      }
+      await engine.unload(); // releases GPU memory/resources
+    } catch (_) {
+      // engine may already be broken -- discarding it anyway
     }
   }
   enginePromise = null;

@@ -3,9 +3,7 @@ import { useState, useRef } from "react";
 import { parseCommand } from "../lib/aiCommandParser";
 
 import { geocodeLocation } from "../lib/geocode";
-
-import { isWebGPUAvailable } from "../lib/aiEngine";
-// import { spokenDigitsToNumeric } from "../lib/normalizeIdentifier";
+import { isWebGPUAvailable, getEngine, resetEngine } from '../lib/aiEngine';
 import { collapseDigitSpaces } from "../lib/normalizeIdentifier";
 import { normalizeDigits } from "../lib/normalizeIdentifier";
 const SpeechRecognitionAPI =
@@ -79,7 +77,7 @@ export default function AICommandBar({ vesselMapRef }) {
         setProgressText(report.text || "Loading model...");
       });
 
-      console.debug("[AI] parsed command:", command); // <-- add this line
+      // console.debug("[AI] parsed command:", command); // <-- add this line
 
       if (requestIdRef.current !== myRequestId) return;
       // Stop was pressed while we were waiting -- drop this stale result.
@@ -165,14 +163,30 @@ export default function AICommandBar({ vesselMapRef }) {
       }
     }
   }
+async function handleStop() {
+  requestIdRef.current++; // invalidate whatever result was in flight
+  clearTimeout(silenceTimerRef.current);
+  if (listening) recognitionRef.current?.stop();
 
-  function handleStop() {
-    requestIdRef.current++;
-    setStatus("ready");
-    setFeedback("Stopped.");
-    clearTimeout(silenceTimerRef.current);
-    if (listening) recognitionRef.current?.stop();
+  setStatus('loading'); // reuses existing "Loading model…" UI state
+  setFeedback('Stopping and freeing memory…');
+
+  // Actually interrupt the running generation (stops GPU work now,
+  // not just ignoring the eventual result), then unconditionally
+  // discard the engine and rebuild fresh -- interruptGenerate() is
+  // known to leave internal state broken, so we don't try to reuse it.
+  await resetEngine({ interrupt: true });
+
+  try {
+    await getEngine();
+    setFeedback('Stopped.');
+  } catch (err) {
+    console.error('[AI] Failed to reload engine after stop:', err);
+    setFeedback('Stopped, but the model failed to reload — try again.');
+  } finally {
+    setStatus('ready');
   }
+}
 
   function handleSubmit(e) {
     e.preventDefault();

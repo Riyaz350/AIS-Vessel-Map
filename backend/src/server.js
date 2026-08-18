@@ -42,7 +42,6 @@ async function start() {
       const vessel = await updateVesselName(mmsi, name);
 
       if (vessel) {
-        console.log(`[Server] MongoDB updated: ${mmsi} -> ${vessel.name}`);
 
         io.emit("vessel:update", vessel);
       }

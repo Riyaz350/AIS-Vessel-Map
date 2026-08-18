@@ -40,7 +40,6 @@ function connect(apiKey, onShipName) {
     try {
       const msg = JSON.parse(raw.toString());
 
-      console.log("[AISStream] Message:", msg.MessageType);
 
       if (msg.MessageType !== "ShipStaticData") {
         return;
@@ -54,7 +53,6 @@ function connect(apiKey, onShipName) {
 
       const name = metaName || staticName || null;
 
-      console.log(`[AISStream] Static data: MMSI=${mmsi}, name=${name}`);
 
       if (!mmsi || !name) {
         console.log("[AISStream] Static message has no MMSI/name");
@@ -64,7 +62,6 @@ function connect(apiKey, onShipName) {
       // Cache it
       nameCache.set(String(mmsi), name);
 
-      console.log(`[AISStream] Cached: ${mmsi} -> ${name}`);
 
       // IMPORTANT:
       // Tell server to update MongoDB immediately.
