@@ -2,6 +2,8 @@
 
 A real-time vessel tracking web app that decodes a live AIS feed, stores vessel positions in MongoDB, and displays them on an interactive map with hover tooltips and live updates.
 
+## Recorded Demo
+Here's the recorded demo of this project [Live Demo](https://youtu.be/xm1mToCxIGY?si=RX6_X7uSNMJ9makW)
 ## 🔗 Links
 
 - **Live Demo:** [AIS Vessel Map](https://ais-vessel-map-tawny.vercel.app/)
