@@ -6,6 +6,9 @@ import { useCollisionRisks } from '../hooks/useCollisionRisks';
 import { normalizeDigits } from '../lib/normalizeIdentifier';
 import VesselDrawer from './VesselDrawer';
 import VesselNameDropdown from './VesselNameDropdown';
+import { getVesselAgeBucket, AGE_BUCKET_COLORS } from '../lib/vesselAge';
+import VesselLegend from './VesselLegend';
+
 
 const DEFAULT_CENTER = [30.0522, -118.2437];
 const DEFAULT_ZOOM = 6;
@@ -13,7 +16,7 @@ const DEFAULT_COLOR = '#2563eb';
 const FOCUSED_COLOR = '#16f9ee';
 const RISK_COLOR = '#2563eb';
 
-function createShipIcon(rotation = 0, color = DEFAULT_COLOR) {
+function createShipIcon(rotation = 0, color = '#2563eb') {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
          style="transform: rotate(${rotation}deg); transform-origin: center;">
@@ -22,6 +25,7 @@ function createShipIcon(rotation = 0, color = DEFAULT_COLOR) {
   `;
   return L.divIcon({ html: svg, className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
 }
+
 
 function MapClickDeselect({ onDeselect }) {
   useMapEvents({ click: () => onDeselect() });
@@ -48,7 +52,7 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
   function colorFor(v, isFocused) {
     if (isFocused) return FOCUSED_COLOR;
     if (riskyMmsiSet.has(v.mmsi)) return RISK_COLOR;
-    return DEFAULT_COLOR;
+    return AGE_BUCKET_COLORS[getVesselAgeBucket(v.lastUpdated)];
   }
 
   function selectVesselAndFly(vessel) {
@@ -102,8 +106,8 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
           selectVesselAndFly(target);
         }}
       />
+      <VesselLegend />
 
-     
 
       <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} style={{ height: '100vh', width: '100%' }} ref={mapRef}>
         <TileLayer
@@ -114,11 +118,14 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
         {namedVessels.map((v) => {
           const rotation = (v.heading != null && v.heading !== 511) ? v.heading : (v.cog ?? 0);
           const isFocused = v.mmsi === selectedMmsi;
+          const ageBucket = getVesselAgeBucket(v.lastUpdated);
+          const ageColor = AGE_BUCKET_COLORS[ageBucket];
+
           return (
             <Marker
               key={v.mmsi}
               position={[v.lat, v.lon]}
-              icon={createShipIcon(rotation, colorFor(v, isFocused))}
+              icon={createShipIcon(rotation, colorFor(v, isFocused), ageColor)}
               eventHandlers={{ click: () => selectVesselAndFly(v) }}
             >
               <Tooltip direction="top" offset={[0, -12]}>

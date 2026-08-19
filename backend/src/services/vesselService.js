@@ -96,9 +96,7 @@ async function updateVesselName(mmsi, name) {
    * message is processed.
    */
   if (!existingVessel) {
-    console.log(
-      `[DB] Name update skipped - vessel not found | MMSI=${mmsi} | NAME=${cleanName}`
-    );
+     
 
     return null;
   }
@@ -128,11 +126,7 @@ async function updateVesselName(mmsi, name) {
     }
   );
 
-  if (vessel) {
-    console.log(
-      `[DB] Vessel name updated | MMSI=${mmsi} | NAME=${vessel.name}`
-    );
-  }
+   
 
   return vessel;
 }
