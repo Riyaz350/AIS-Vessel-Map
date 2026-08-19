@@ -126,8 +126,12 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
               key={v.mmsi}
               position={[v.lat, v.lon]}
               icon={createShipIcon(rotation, colorFor(v, isFocused), ageColor)}
-              eventHandlers={{ click: () => selectVesselAndFly(v) }}
-            >
+              eventHandlers={{
+                click: (e) => {
+                  L.DomEvent.stopPropagation(e); // prevent this click from also reaching the map's own click handler (MapClickDeselect)
+                  selectVesselAndFly(v);
+                },
+              }}            >
               <Tooltip direction="top" offset={[0, -12]}>
                 <strong>{v.name}</strong><br />
                 MMSI: {v.mmsi}<br />
