@@ -22,7 +22,7 @@ export default function VesselLegend() {
         <div style={styles.panel}>
           <div style={styles.sectionTitle}>Vessel state</div>
           <Row color={FOCUSED_COLOR} label="Focused / selected" />
-          <Row color={RISK_COLOR} label="Collision risk" />
+          {/* <Row color={RISK_COLOR} label="Collision risk" /> */}
 
           <div style={{ ...styles.sectionTitle, marginTop: 10 }}>Data age (no risk/focus)</div>
           <Row color={AGE_BUCKET_COLORS.fresh} label={`Fresh — ${AGE_BUCKET_LABELS.fresh}`} />
