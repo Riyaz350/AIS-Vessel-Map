@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet.boatmarker';
 
 export default function BoatMarker({
     position,
@@ -16,19 +15,44 @@ export default function BoatMarker({
     useEffect(() => {
         if (!map) return;
 
-        const marker = L.boatMarker(position, {
-            color,
-            idleCircle: true,
-            iconSize: [10, 10],
+        const icon = L.divIcon({
+            className: 'boat-marker',
+            html: `
+                <svg
+                    class="boat-svg"
+                    width="30"
+                    height="30"
+                    viewBox="0 0 30 30"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <polygon
+                        points="15,2 27,27 15,22 3,27"
+                        fill="${color}"
+                    />
+                </svg>
+            `,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
         });
 
-        marker.setHeading(heading || 0);
+        const marker = L.marker(position, {
+            icon,
+        });
 
+        // Rotate the boat
+        const svg = marker.getElement()?.querySelector('.boat-svg');
+
+        if (svg) {
+            svg.style.transform = `rotate(${heading}deg)`;
+            svg.style.transformOrigin = 'center';
+        }
+
+        // Event handlers
         Object.entries(eventHandlers).forEach(([event, handler]) => {
             marker.on(event, handler);
         });
 
-        // Hover tooltip
+        // Tooltip
         if (tooltipContent) {
             marker.bindTooltip(tooltipContent, {
                 direction: 'top',
@@ -49,14 +73,20 @@ export default function BoatMarker({
         };
     }, [map]);
 
+    // Update position and heading
     useEffect(() => {
         const marker = markerRef.current;
 
         if (!marker) return;
 
         marker.setLatLng(position);
-        marker.setHeading(heading || 0);
 
+        const svg = marker.getElement()?.querySelector('.boat-svg');
+
+        if (svg) {
+            svg.style.transform = `rotate(${heading || 0}deg)`;
+            svg.style.transformOrigin = 'center';
+        }
     }, [position, heading]);
 
     return null;
