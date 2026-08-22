@@ -32,6 +32,11 @@ export function formatVesselAge(lastUpdated, now = Date.now()) {
   return `${ageHr} hr ago`;
 }
 
+export function isVesselFresh(lastUpdated, maxAgeMinutes = 20, now = Date.now()) {
+  if (!lastUpdated) return false;
+  const ageMs = now - new Date(lastUpdated).getTime();
+  return ageMs <= maxAgeMinutes * 60 * 1000;
+}
 export const AGE_BUCKET_COLORS = {
   [AGE_BUCKETS.FRESH]: '#16a34a',      // green
   [AGE_BUCKETS.RECENT]: '#eab308',     // yellow

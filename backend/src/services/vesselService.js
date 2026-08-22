@@ -19,48 +19,24 @@ async function upsertVessel(data) {
   const update = {
     lat: data.lat,
     lon: data.lon,
+    sog: data.sog,
+    cog: data.cog,
+    heading: data.heading,
+    vesselType: data.vesselType,
+
+    // IMPORTANT
     lastUpdated: new Date(),
   };
 
-  if (data.imo) {
-    update.imo = data.imo;
-  }
-
-  if (data.sog != null) {
-    update.sog = data.sog;
-  }
-
-  if (data.cog != null) {
-    update.cog = data.cog;
-  }
-
-  if (data.heading != null) {
-    update.heading = data.heading;
-  }
-
-  if (data.vesselType != null) {
-    update.vesselType = data.vesselType;
-  }
-
-  
-
-  const vessel = await Vessel.findOneAndUpdate(
-    {
-      mmsi: data.mmsi,
-    },
-    {
-      $set: update,
-    },
+  return Vessel.findOneAndUpdate(
+    { mmsi: data.mmsi },
+    { $set: update },
     {
       upsert: true,
       returnDocument: "after",
-      setDefaultsOnInsert: true,
     }
   );
-
-  return vessel;
 }
-
 
 /*
  * Update vessel name.
