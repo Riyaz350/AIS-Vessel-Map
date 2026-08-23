@@ -36,12 +36,17 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
 
   const selectedVessel = namedVessels.find((v) => v.mmsi === selectedMmsi) || null;
 
-  function colorFor(v, isFocused) {
-    if (isFocused) return FOCUSED_COLOR;
-    if (riskyMmsiSet.has(v.mmsi)) return RISK_COLOR;
-    return AGE_BUCKET_COLORS[getVesselAgeBucket(v.lastUpdated)];
-  }
+  // function colorFor(v, isFocused) {
+  //   if (isFocused) return FOCUSED_COLOR;
+  //   if (riskyMmsiSet.has(v.mmsi)) return RISK_COLOR;
+  //   return AGE_BUCKET_COLORS[getVesselAgeBucket(v.lastUpdated)];
+  // }
 
+  function colorFor(v, isFocused) {
+    if (isFocused) return FOCUSED_COLOR; 
+    const bucket = getVesselAgeBucket(v.lastUpdated);
+    return AGE_BUCKET_COLORS[bucket];
+  }
   function selectVesselAndFly(vessel) {
     if (!vessel) return;
     setSelectedMmsi(vessel.mmsi);
