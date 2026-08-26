@@ -21,7 +21,7 @@ console.log('vite api', import.meta.env.VITE_API_URL)
       setVessels(pruned);
     });
 
-    const socket = io(import.meta.env.API_URL);
+    const socket = io(import.meta.env.VITE_API_URL);
     socketRef.current = socket;
 
     socket.on('vessel:snapshot', (list) => {
