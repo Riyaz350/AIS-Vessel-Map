@@ -4,33 +4,33 @@ const Vessel = require('../models/Vessel');
 const router = express.Router();
 
 // GET /api/vessels — all current vessel positions
-// router.get('/', async (req, res) => {
-//   try {
-//     const vessels = await Vessel.find().sort({
-//       lastUpdated: {
-//         type: Date,
-//         default: Date.now,
-//         expires: 1200, // 20 minutes, in seconds -- MongoDB deletes the document
-//         // automatically once lastUpdated is this old, no app code needed
-//       },
-//     });
-//     res.json(vessels);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: 'Failed to fetch vessels' });
-//   }
-// });
-
-// GET /api/vessels — all current vessel positions
 router.get('/', async (req, res) => {
   try {
-    const vessels = await Vessel.find().sort({ lastUpdated: -1 })
+    const vessels = await Vessel.find().sort({
+      lastUpdated: {
+        type: Date,
+        default: Date.now,
+        expires: 1200, // 20 minutes, in seconds -- MongoDB deletes the document
+        // automatically once lastUpdated is this old, no app code needed
+      },
+    });
     res.json(vessels);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch vessels' });
   }
 });
+
+// GET /api/vessels — all current vessel positions
+// router.get('/', async (req, res) => {
+//   try {
+//     const vessels = await Vessel.find().sort({ lastUpdated: -1 })
+//     res.json(vessels);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: 'Failed to fetch vessels' });
+//   }
+// });
 
 // GET /api/vessels/:mmsi — a specific vessel
 router.get('/:mmsi', async (req, res) => {

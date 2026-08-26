@@ -4,7 +4,6 @@ import { loadVesselCache, saveVesselCache } from '../lib/vesselCache';
 import { isVesselFresh } from '../lib/vesselAge';
 
 const MAX_VESSEL_AGE_MINUTES = 20;
-
 export function useVesselSocket() {
   const [vessels, setVessels] = useState({});
   const socketRef = useRef(null);
@@ -84,6 +83,6 @@ export function useVesselSocket() {
       socket.disconnect();
     };
   }, []);
-
+  console.log(Object.values(vessels));
   return Object.values(vessels);
 }
