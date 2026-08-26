@@ -6,8 +6,7 @@ import { isVesselFresh } from '../lib/vesselAge';
 const MAX_VESSEL_AGE_MINUTES = 20;
 export function useVesselSocket() {
   const [vessels, setVessels] = useState({});
-  const socketRef = useRef(null);
-console.log('vite api', import.meta.env.VITE_API_URL)
+  const socketRef = useRef(null); 
   useEffect(() => {
     let cancelled = false;
 
@@ -82,7 +81,6 @@ console.log('vite api', import.meta.env.VITE_API_URL)
       clearInterval(pruneInterval);
       socket.disconnect();
     };
-  }, []);
-  console.log(Object.values(vessels));
+  }, []); 
   return Object.values(vessels);
 }
