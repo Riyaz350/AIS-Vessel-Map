@@ -22,7 +22,7 @@ export function useVesselSocket() {
       setVessels(pruned);
     });
 
-    const socket = io(import.meta.env.VITE_API_URL);
+    const socket = io(import.meta.env.API_URL);
     socketRef.current = socket;
 
     socket.on('vessel:snapshot', (list) => {
