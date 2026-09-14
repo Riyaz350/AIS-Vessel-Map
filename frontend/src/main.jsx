@@ -21,9 +21,12 @@ enableLogs: true,
 
   // Record 10% of normal user sessions
   replaysSessionSampleRate: 0.1,
-  replaysOnErrorRate: 1.0,
+  replaysOnErrorSampleRate: 1.0,
 
 });
+if (import.meta.env.DEV) {
+  window.Sentry = Sentry; // debug only — remove before shipping
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
