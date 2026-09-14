@@ -1,0 +1,22 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "AIS_FEED_HOST",
+      "description": "Hostname of the external AIS TCP feed (provided separately for this assessment). Without it the map shows no vessels.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "AIS_FEED_PORT",
+      "description": "Port of the external AIS TCP feed.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "AISSTREAM_API_KEY",
+      "description": "API key for aisstream.io WebSocket — used to enrich vessels with ship names. Get it at https://www.aisstream.io/ (free signup). Without it, vessel name lookups are disabled.",
+      "requiredAtBoot": false
+    }
+  ]
+}
