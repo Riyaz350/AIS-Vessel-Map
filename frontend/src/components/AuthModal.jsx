@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export default function AuthModal({ onClose }) {
-  const { signIn, signUp, isSupabaseConfigured } = useAuth();
+  const { signIn, signUp, isFirebaseConfigured } = useAuth();
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,9 +38,10 @@ export default function AuthModal({ onClose }) {
           ×
         </button>
         <h2 style={titleStyle}>{mode === 'login' ? 'Log In' : 'Sign Up'}</h2>
-        {!isSupabaseConfigured ? (
+        {!isFirebaseConfigured ? (
           <p style={noticeStyle}>
-            Authentication is not configured yet. Please contact support.
+            Authentication is not configured yet. Add Firebase credentials to
+            enable login.
           </p>
         ) : (
           <>
