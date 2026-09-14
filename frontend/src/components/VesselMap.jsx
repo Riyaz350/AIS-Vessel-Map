@@ -9,6 +9,8 @@ import VesselNameDropdown from './VesselNameDropdown';
 import { getVesselAgeBucket, AGE_BUCKET_COLORS } from '../lib/vesselAge';
 import VesselLegend from './VesselLegend';
 import BoatMarker from './BoatMarker';   // ← our new wrapper
+import { useAuth } from '../context/AuthContext';
+import posthog from '../lib/posthog';
 
 const DEFAULT_CENTER = [30.0522, -118.2437];
 const DEFAULT_ZOOM = 6;
@@ -24,6 +26,7 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
   const vessels = useVesselSocket();
   const [selectedMmsi, setSelectedMmsi] = useState(null);
   const mapRef = useRef(null);
+  const { requireAuth } = useAuth();
 
   const namedVessels = vessels.filter((v) => v.name && v.name.trim().length > 0);
 
@@ -49,10 +52,13 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
   }
   function selectVesselAndFly(vessel) {
     if (!vessel) return;
-    setSelectedMmsi(vessel.mmsi);
-    if (mapRef.current) {
-      mapRef.current.flyTo([vessel.lat, vessel.lon], 10, { duration: 1.5 });
-    }
+    requireAuth(() => {
+      setSelectedMmsi(vessel.mmsi);
+      if (mapRef.current) {
+        mapRef.current.flyTo([vessel.lat, vessel.lon], 10, { duration: 1.5 });
+      }
+      posthog.capture('vessel_selected', { mmsi: vessel.mmsi, name: vessel.name });
+    });
   }
 
   useImperativeHandle(ref, () => ({
