@@ -43,7 +43,7 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
   // }
 
   function colorFor(v, isFocused) {
-    if (isFocused) return FOCUSED_COLOR; 
+    if (isFocused) return FOCUSED_COLOR;
     const bucket = getVesselAgeBucket(v.lastUpdated);
     return AGE_BUCKET_COLORS[bucket];
   }
@@ -98,6 +98,13 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
           selectVesselAndFly(target);
         }}
       />
+      <button
+        onClick={() => {
+          throw new Error('This is your first error!');
+        }}
+      >
+        Break the world
+      </button>
       <VesselLegend />
 
       <MapContainer
@@ -106,6 +113,7 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
         style={{ height: '100vh', width: '100%' }}
         ref={mapRef}
       >
+
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
