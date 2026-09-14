@@ -6,6 +6,8 @@ import { geocodeLocation } from "../lib/geocode";
 import { isWebGPUAvailable, getEngine, resetEngine } from '../lib/aiEngine';
 import { collapseDigitSpaces } from "../lib/normalizeIdentifier";
 import { normalizeDigits } from "../lib/normalizeIdentifier";
+import { useAuth } from "../context/AuthContext";
+import posthog from "../lib/posthog";
 const SpeechRecognitionAPI =
   typeof window !== "undefined" &&
   (window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -25,6 +27,7 @@ const LANGUAGES = {
 };
 
 export default function AICommandBar({ vesselMapRef }) {
+  const { requireAuth } = useAuth();
   const [text, setText] = useState("");
 
   const [status, setStatus] = useState("idle"); // idle | loading | thinking | error
@@ -73,6 +76,7 @@ export default function AICommandBar({ vesselMapRef }) {
     setFeedback("");
 
     try {
+      posthog.capture('ai_command_run', { text: commandText });
       const command = await parseCommand(commandText, (report) => {
         setProgressText(report.text || "Loading model...");
       });
@@ -191,7 +195,7 @@ async function handleStop() {
   function handleSubmit(e) {
     e.preventDefault();
 
-    runCommand(text);
+    requireAuth(() => runCommand(text));
   }
 
   function handleMicClick() {
@@ -258,7 +262,7 @@ async function handleStop() {
 
       if (finalText) {
         setText(finalText);
-        runCommand(finalText);
+        requireAuth(() => runCommand(finalText));
       }
     };
 
