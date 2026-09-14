@@ -32,17 +32,25 @@ export default function BoatMarker({
 }) {
   const map = useMap();
   const markerRef = useRef(null);
+  const handlersRef = useRef(eventHandlers);
 
-  // Create the marker once, on mount -- position/rotation/color for
-  // this initial creation only; all later updates are handled below.
+  // Keep the ref current every render, without re-triggering marker setup
+  useEffect(() => {
+    handlersRef.current = eventHandlers;
+  });
+
   useEffect(() => {
     if (!map) return;
 
     const marker = L.marker(position, { icon: buildIcon(color) });
     applyRotation(marker, heading);
 
-    Object.entries(eventHandlers).forEach(([event, handler]) => {
-      marker.on(event, handler);
+    // Bind stable wrappers once; they always delegate to the latest handlers
+    const boundHandlers = {};
+    Object.keys(handlersRef.current).forEach((event) => {
+      const wrapped = (e) => handlersRef.current[event]?.(e);
+      boundHandlers[event] = wrapped;
+      marker.on(event, wrapped);
     });
 
     if (tooltipContent) {
@@ -59,6 +67,9 @@ export default function BoatMarker({
 
     return () => {
       if (markerRef.current) {
+        Object.entries(boundHandlers).forEach(([event, wrapped]) => {
+          markerRef.current.off(event, wrapped);
+        });
         map.removeLayer(markerRef.current);
         markerRef.current = null;
       }

@@ -104,13 +104,6 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
           selectVesselAndFly(target);
         }}
       />
-      <button
-        onClick={() => {
-          throw new Error('This is your first error!');
-        }}
-      >
-        Break the world
-      </button>
       <VesselLegend />
 
       <MapContainer
