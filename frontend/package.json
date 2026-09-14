@@ -12,15 +12,16 @@
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.84",
     "@sentry/react": "^10.74.0",
+    "@supabase/supabase-js": "^2.116.0",
+    "firebase": "^10.14.1",
     "idb-keyval": "^6.3.0",
     "leaflet": "^1.9.4",
     "leaflet.boatmarker": "^1.1.5",
+    "posthog-js": "^1.194.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-leaflet": "^5.0.0",
-    "socket.io-client": "^4.8.3",
-    "firebase": "^10.14.1",
-    "posthog-js": "^1.194.5"
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

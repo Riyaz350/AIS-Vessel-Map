@@ -1,11 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-} from 'firebase/auth';
-import { auth, isFirebaseConfigured } from '../lib/firebase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import posthog from '../lib/posthog';
 
 const AuthContext = createContext(null);
@@ -16,45 +10,55 @@ export function AuthProvider({ children }) {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
-    if (!auth) {
+    if (!supabase) {
       setLoading(false);
       return;
     }
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setLoading(false);
-      if (u) {
-        posthog.identify(u.uid, { email: u.email });
+      if (session?.user) {
+        posthog.identify(session.user.id, { email: session.user.email });
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+      if (session?.user) {
+        posthog.identify(session.user.id, { email: session.user.email });
       } else {
         posthog.reset();
       }
     });
-    return () => unsub();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   async function signUp(email, password) {
-    if (!auth) throw new Error('Authentication is not configured.');
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    setUser(cred.user);
+    if (!supabase) throw new Error('Authentication is not configured.');
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
     posthog.capture('user_signed_up', { email });
-    return cred;
+    return data;
   }
 
   async function signIn(email, password) {
-    if (!auth) throw new Error('Authentication is not configured.');
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    setUser(cred.user);
+    if (!supabase) throw new Error('Authentication is not configured.');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    setUser(data.user);
     posthog.capture('user_signed_in', { email });
-    return cred;
+    return data;
   }
 
   async function signOut() {
-    if (!auth) return;
-    await firebaseSignOut(auth);
+    if (!supabase) return;
+    await supabase.auth.signOut();
     posthog.capture('user_signed_out');
   }
 
-  /** If authenticated, run the callback. Otherwise open the login modal. */
   function requireAuth(callback) {
     if (user) {
       callback();
@@ -74,7 +78,7 @@ export function AuthProvider({ children }) {
         requireAuth,
         showAuthModal,
         setShowAuthModal,
-        isFirebaseConfigured,
+        isSupabaseConfigured,
       }}
     >
       {children}
