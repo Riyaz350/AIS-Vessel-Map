@@ -11,6 +11,8 @@ import VesselLegend from './VesselLegend';
 import BoatMarker from './BoatMarker';   // ← our new wrapper
 import { useAuth } from '../context/AuthContext';
 import posthog from '../lib/posthog';
+import * as Sentry from '@sentry/react';
+
 
 const DEFAULT_CENTER = [30.0522, -118.2437];
 const DEFAULT_ZOOM = 6;
@@ -92,10 +94,33 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
     },
   }));
 
+  function triggerSentryTestError() {
+    try {
+      throw new Error('Manual test error — VesselMap replay check');
+    } catch (err) {
+      Sentry.captureException(err, { tags: { source: 'manual-test' } });
+    }
+  }
+
+  const testErrorBtnStyle = {
+    padding: '6px 12px',
+    fontSize: 13,
+    border: '1px solid #dc2626',
+    borderRadius: 6,
+    background: '#fff',
+    color: '#dc2626',
+    cursor: 'pointer',
+    margin: '8px 0',
+  };
+
   return (
     <>
       <VesselDrawer vessel={selectedVessel} onClose={() => setSelectedMmsi(null)} />
 
+      <button onClick={triggerSentryTestError} style={testErrorBtnStyle}>
+        Trigger Sentry Test Error
+      </button>
+      
       <VesselNameDropdown
         vessels={namedVessels}
         selectedMmsi={selectedMmsi}

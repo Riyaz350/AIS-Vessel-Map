@@ -23,6 +23,7 @@ function applyRotation(marker, heading) {
   }
 }
 
+
 export default function BoatMarker({
   position,
   color = '#2563eb',
