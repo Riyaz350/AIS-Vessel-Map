@@ -35,6 +35,7 @@ export function AuthProvider({ children }) {
   async function signUp(email, password) {
     if (!auth) throw new Error('Authentication is not configured.');
     const cred = await createUserWithEmailAndPassword(auth, email, password);
+    setUser(cred.user);
     posthog.capture('user_signed_up', { email });
     return cred;
   }
@@ -42,6 +43,7 @@ export function AuthProvider({ children }) {
   async function signIn(email, password) {
     if (!auth) throw new Error('Authentication is not configured.');
     const cred = await signInWithEmailAndPassword(auth, email, password);
+    setUser(cred.user);
     posthog.capture('user_signed_in', { email });
     return cred;
   }
