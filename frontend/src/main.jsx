@@ -20,8 +20,6 @@ Sentry.init({
   // Record 10% of normal user sessions
   replaysSessionSampleRate: 0.1,
   replaysOnErrorRate: 1.0,
-  // Record 100% of sessions where an error occurs
-  replaysOnErrorSampleRate: 1.0,
 
 });
 
