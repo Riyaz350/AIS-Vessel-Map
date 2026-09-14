@@ -9,6 +9,7 @@ import { AuthProvider } from './context/AuthContext';
 
 Sentry.init({
   dsn: 'https://5a827c26800cc629374653cc345f9f14@o4512084899921920.ingest.us.sentry.io/4512084910473216',
+  release: `ais-vessel-map-frontend@${__APP_VERSION__}`,
 debug: true,
 enableLogs: true,
   integrations: [
