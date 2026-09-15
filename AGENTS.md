@@ -7,10 +7,10 @@ React/Vite/Leaflet frontend over WebSockets.
 
 ## Architecture
 - **Frontend** (`frontend/`): Vite + React 19 + react-leaflet. Connects to the
-  backend via Socket.IO using `import.meta.env.VITE_API_URL`. Port 5173 (mapped to host 3000).
-- **Backend** (`backend/`): Express + Socket.IO + Mongoose. Listens on port 5000
-  (mapped to host 8000). `nodemon` for live reload.
-- **MongoDB**: compose service `mongo:7`, database `ais`.
+  backend via Socket.IO using `import.meta.env.VITE_API_URL`. Runs on port 5173.
+- **Backend** (`backend/`): Express + Socket.IO + Mongoose. Listens on the port
+  from `PORT` in `backend/.env`. `nodemon` for live reload.
+- **MongoDB**: a MongoDB instance reachable via `MONGO_URI`.
 
 ## External services (user-provided)
 - `AIS_FEED_HOST` / `AIS_FEED_PORT` — the live AIS TCP feed. The backend connects
@@ -19,18 +19,17 @@ React/Vite/Leaflet frontend over WebSockets.
 - `AISSTREAM_API_KEY` — aisstream.io WebSocket key for ship-name enrichment.
   Optional; name lookups are silently disabled without it.
 
-## Running
+## Running locally
+Backend (from `backend/`, with `.env` populated — see `.env.example`):
 ```
-docker compose -f docker-compose.base44.yml up -d --build
+npm install
+npm run dev
 ```
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000 (health: GET /health)
-- Vessels: GET /api/vessels
 
-## Compose notes
-- Both app services use `node:22` base images with source bind-mounted
-  (no prebuilt app images) — edits hot-reload via nodemon / Vite HMR.
-- `VITE_API_URL` and `CORS_ORIGIN` are derived from `BASE44_PUBLIC_HOST_SUFFIX`
-  so the frontend can reach the backend across separate origins.
-- Secret precedence: `.env.base44-defaults` (placeholders) → `/run/base44/app.env`
-  (user secrets, always wins). User-supplied keys are NEVER in `environment:`.
+Frontend (from `frontend/`, with `.env` populated — see `VITE_API_URL` etc.):
+```
+npm install
+npm run dev
+```
+- Frontend: http://localhost:5173
+- Backend API: whatever `PORT` is set to in `backend/.env`

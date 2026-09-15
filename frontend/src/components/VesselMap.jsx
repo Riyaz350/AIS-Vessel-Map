@@ -11,7 +11,6 @@ import VesselLegend from './VesselLegend';
 import BoatMarker from './BoatMarker';   // ← our new wrapper
 import { useAuth } from '../context/AuthContext';
 import posthog from '../lib/posthog';
-import * as Sentry from '@sentry/react';
 
 
 const DEFAULT_CENTER = [30.0522, -118.2437];
@@ -88,14 +87,6 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
     },
   }));
 
-  function triggerSentryTestError() {
-    try {
-      throw new Error('Manual test error — VesselMap replay check');
-    } catch (err) {
-      Sentry.captureException(err, { tags: { source: 'manual-test' } });
-    }
-  }
-
   function triggerUncaughtTestError() {
     // Deliberately not wrapped in try/catch -- this exercises Sentry's
     // global window.onerror handler and the real crash -> replay path,
@@ -103,7 +94,7 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
     throw new Error('Manual UNCAUGHT test error — VesselMap replay check');
   }
 
-  const testErrorBtnStyle = {
+  const uncaughtTestErrorBtnStyle = {
     position: 'fixed',
     bottom: 16,
     left: 16,
@@ -113,27 +104,14 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
     fontWeight: 600,
     border: 'none',
     borderRadius: 999,
-    background: 'rgba(220, 38, 38, 0.08)',
-    color: '#dc2626',
-    cursor: 'pointer',
-  };
-
-  const uncaughtTestErrorBtnStyle = {
-    ...testErrorBtnStyle,
-    bottom: 56,
     background: '#dc2626',
     color: '#fff',
+    cursor: 'pointer',
   };
 
   return (
     <>
       <VesselDrawer vessel={selectedVessel} onClose={() => setSelectedMmsi(null)} />
-
-      {import.meta.env.DEV && (
-        <button onClick={triggerSentryTestError} style={testErrorBtnStyle}>
-          Trigger Sentry Test Error
-        </button>
-      )}
 
       <button onClick={triggerUncaughtTestError} style={uncaughtTestErrorBtnStyle}>
         Trigger Uncaught Test Error

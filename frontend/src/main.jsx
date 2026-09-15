@@ -26,9 +26,6 @@ enableLogs: true,
   replaysOnErrorSampleRate: 1.0,
 
 });
-if (import.meta.env.DEV) {
-  window.Sentry = Sentry; // debug only — remove before shipping
-}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
