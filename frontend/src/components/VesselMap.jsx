@@ -94,6 +94,12 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
     throw new Error('Manual UNCAUGHT test error — VesselMap replay check');
   }
 
+  function triggerUnhandledRejectionTestError() {
+    // No .catch() -- exercises Sentry's global window.onunhandledrejection
+    // handler, the other half of GlobalHandlers alongside window.onerror.
+    Promise.reject(new Error('Manual UNHANDLED REJECTION test error — VesselMap replay check'));
+  }
+
   const uncaughtTestErrorBtnStyle = {
     position: 'fixed',
     bottom: 16,
@@ -109,12 +115,22 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
     cursor: 'pointer',
   };
 
+  const unhandledRejectionBtnStyle = {
+    ...uncaughtTestErrorBtnStyle,
+    bottom: 56,
+    background: '#9333ea',
+  };
+
   return (
     <>
       <VesselDrawer vessel={selectedVessel} onClose={() => setSelectedMmsi(null)} />
 
       <button onClick={triggerUncaughtTestError} style={uncaughtTestErrorBtnStyle}>
         Trigger Uncaught Test Error
+      </button>
+
+      <button onClick={triggerUnhandledRejectionTestError} style={unhandledRejectionBtnStyle}>
+        Trigger Unhandled Rejection Error
       </button>
 
       <VesselNameDropdown
