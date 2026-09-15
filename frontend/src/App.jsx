@@ -4,6 +4,7 @@ import VesselMap from './components/VesselMap';
 import AICommandBar from './components/AICommandBar';
 import AuthModal from './components/AuthModal';
 import { useAuth } from './context/AuthContext';
+import { COLORS, RADIUS, SHADOW, FONT_FAMILY } from './lib/theme';
 
 export default function App() {
   const vesselMapRef = useRef(null);
@@ -39,25 +40,26 @@ export default function App() {
 
 const authContainerStyle = {
   position: 'fixed',
-  top: 12,
-  right: 12,
-  zIndex: 1500,
-  fontFamily: 'system-ui, sans-serif',
+  top: 16,
+  right: 16,
+  zIndex: 1200,
+  fontFamily: FONT_FAMILY,
 };
 
 const userBoxStyle = {
   display: 'flex',
   alignItems: 'center',
-  gap: 8,
-  background: '#fff',
-  borderRadius: 8,
-  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-  padding: '6px 10px',
+  gap: 10,
+  background: COLORS.surface,
+  borderRadius: RADIUS.pill,
+  boxShadow: SHADOW.float,
+  padding: '6px 8px 6px 16px',
 };
 
 const userEmailStyle = {
   fontSize: 13,
-  color: '#1f2937',
+  fontWeight: 500,
+  color: COLORS.textPrimary,
   maxWidth: 180,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
@@ -66,21 +68,23 @@ const userEmailStyle = {
 
 const signOutBtnStyle = {
   border: 'none',
-  background: '#ef4444',
-  color: '#fff',
-  borderRadius: 5,
-  padding: '4px 10px',
+  background: COLORS.dangerBg,
+  color: COLORS.danger,
+  borderRadius: RADIUS.pill,
+  padding: '6px 14px',
   fontSize: 12,
+  fontWeight: 600,
   cursor: 'pointer',
 };
 
 const loginBtnStyle = {
   border: 'none',
-  background: '#2563eb',
+  background: COLORS.primary,
   color: '#fff',
-  borderRadius: 8,
-  padding: '8px 18px',
+  borderRadius: RADIUS.pill,
+  padding: '10px 20px',
   fontSize: 14,
+  fontWeight: 600,
   cursor: 'pointer',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+  boxShadow: SHADOW.float,
 };

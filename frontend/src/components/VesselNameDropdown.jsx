@@ -1,4 +1,5 @@
 import { useMemo, useState, useRef, useEffect } from "react";
+import { COLORS, RADIUS, SHADOW, FONT_FAMILY } from "../lib/theme";
 
 export default function VesselNameDropdown({
   vessels,
@@ -192,56 +193,52 @@ export default function VesselNameDropdown({
 const styles = {
   wrapper: {
     position: "fixed",
-    top: 16,
+    top: 76,
     right: 16,
     zIndex: 1000,
-    fontFamily:
-      "system-ui, sans-serif",
+    fontFamily: FONT_FAMILY,
     width: 260,
   },
 
   selectButton: {
     width: "100%",
-    padding: "8px 10px",
+    padding: "10px 14px",
     fontSize: 13,
-    borderRadius: 8,
-    border: "1px solid #d1d5db",
-    background: "#ffffff",
-    boxShadow:
-      "0 2px 12px rgba(0,0,0,0.25)",
+    borderRadius: RADIUS.md,
+    border: "none",
+    background: COLORS.surface,
+    boxShadow: SHADOW.float,
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
     textAlign: "left",
+    color: COLORS.textPrimary,
+    fontWeight: 500,
   },
 
   arrow: {
     fontSize: 10,
-    color: "#6b7280",
+    color: COLORS.textMuted,
     flexShrink: 0,
   },
 
   dropdown: {
     position: "absolute",
-    top: "calc(100% + 6px)",
+    top: "calc(100% + 8px)",
     left: 0,
     right: 0,
-    background: "#ffffff",
-    borderRadius: 8,
-    border:
-      "1px solid #d1d5db",
-    boxShadow:
-      "0 4px 16px rgba(0,0,0,0.25)",
+    background: COLORS.surface,
+    borderRadius: RADIUS.md,
+    boxShadow: SHADOW.panel,
     overflow: "hidden",
   },
 
   searchWrapper: {
-    padding: 8,
-    borderBottom:
-      "1px solid #e5e7eb",
-    background: "#ffffff",
+    padding: 10,
+    borderBottom: `1px solid ${COLORS.border}`,
+    background: COLORS.surface,
   },
 
   search: {
@@ -249,19 +246,20 @@ const styles = {
     boxSizing: "border-box",
     padding: "8px 10px",
     fontSize: 13,
-    borderRadius: 6,
-    border:
-      "1px solid #d1d5db",
+    borderRadius: RADIUS.sm,
+    border: `1px solid ${COLORS.borderStrong}`,
     outline: "none",
   },
 
   resultCount: {
-    padding: "6px 10px",
+    padding: "8px 12px",
     fontSize: 11,
-    color: "#6b7280",
-    background: "#f9fafb",
-    borderBottom:
-      "1px solid #e5e7eb",
+    fontWeight: 600,
+    letterSpacing: 0.2,
+    textTransform: "uppercase",
+    color: COLORS.textMuted,
+    background: COLORS.hoverBg,
+    borderBottom: `1px solid ${COLORS.border}`,
   },
 
   list: {
@@ -275,11 +273,10 @@ const styles = {
     flexDirection: "column",
     alignItems: "flex-start",
     gap: 2,
-    padding: "9px 10px",
+    padding: "10px 14px",
     border: "none",
-    borderBottom:
-      "1px solid #f3f4f6",
-    background: "#ffffff",
+    borderBottom: `1px solid ${COLORS.hoverBg}`,
+    background: COLORS.surface,
     cursor: "pointer",
     textAlign: "left",
   },
@@ -290,19 +287,19 @@ const styles = {
 
   vesselName: {
     fontSize: 13,
-    fontWeight: 500,
-    color: "#111827",
+    fontWeight: 600,
+    color: COLORS.textPrimary,
   },
 
   vesselMmsi: {
     fontSize: 11,
-    color: "#6b7280",
+    color: COLORS.textMuted,
   },
 
   noResults: {
     padding: "16px 10px",
     fontSize: 12,
-    color: "#6b7280",
+    color: COLORS.textMuted,
     textAlign: "center",
   },
 };

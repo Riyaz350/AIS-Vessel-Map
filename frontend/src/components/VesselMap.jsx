@@ -41,12 +41,6 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
 
   const selectedVessel = namedVessels.find((v) => v.mmsi === selectedMmsi) || null;
 
-  // function colorFor(v, isFocused) {
-  //   if (isFocused) return FOCUSED_COLOR;
-  //   if (riskyMmsiSet.has(v.mmsi)) return RISK_COLOR;
-  //   return AGE_BUCKET_COLORS[getVesselAgeBucket(v.lastUpdated)];
-  // }
-
   function colorFor(v, isFocused) {
     if (isFocused) return FOCUSED_COLOR;
     const bucket = getVesselAgeBucket(v.lastUpdated);
@@ -102,25 +96,49 @@ const VesselMap = forwardRef(function VesselMap(_props, ref) {
     }
   }
 
+  function triggerUncaughtTestError() {
+    // Deliberately not wrapped in try/catch -- this exercises Sentry's
+    // global window.onerror handler and the real crash -> replay path,
+    // rather than a manually reported captureException call.
+    throw new Error('Manual UNCAUGHT test error — VesselMap replay check');
+  }
+
   const testErrorBtnStyle = {
-    padding: '6px 12px',
-    fontSize: 13,
-    border: '1px solid #dc2626',
-    borderRadius: 6,
-    background: '#fff',
+    position: 'fixed',
+    bottom: 16,
+    left: 16,
+    zIndex: 1000,
+    padding: '8px 14px',
+    fontSize: 12,
+    fontWeight: 600,
+    border: 'none',
+    borderRadius: 999,
+    background: 'rgba(220, 38, 38, 0.08)',
     color: '#dc2626',
     cursor: 'pointer',
-    margin: '8px 0',
+  };
+
+  const uncaughtTestErrorBtnStyle = {
+    ...testErrorBtnStyle,
+    bottom: 56,
+    background: '#dc2626',
+    color: '#fff',
   };
 
   return (
     <>
       <VesselDrawer vessel={selectedVessel} onClose={() => setSelectedMmsi(null)} />
 
-      <button onClick={triggerSentryTestError} style={testErrorBtnStyle}>
-        Trigger Sentry Test Error
+      {import.meta.env.DEV && (
+        <button onClick={triggerSentryTestError} style={testErrorBtnStyle}>
+          Trigger Sentry Test Error
+        </button>
+      )}
+
+      <button onClick={triggerUncaughtTestError} style={uncaughtTestErrorBtnStyle}>
+        Trigger Uncaught Test Error
       </button>
-      
+
       <VesselNameDropdown
         vessels={namedVessels}
         selectedMmsi={selectedMmsi}

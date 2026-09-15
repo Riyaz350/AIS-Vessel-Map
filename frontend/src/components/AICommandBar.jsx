@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 
 import { parseCommand } from "../lib/aiCommandParser";
+import { COLORS, RADIUS, SHADOW, FONT_FAMILY } from "../lib/theme";
 
 import { geocodeLocation } from "../lib/geocode";
 import { isWebGPUAvailable, getEngine, resetEngine } from '../lib/aiEngine';
@@ -338,89 +339,99 @@ async function handleStop() {
 const styles = {
   bar: {
     position: "fixed",
-    bottom: 20,
+    bottom: 24,
     left: "50%",
     transform: "translateX(-50%)",
     zIndex: 1000,
 
-    background: "#ffffff",
-    borderRadius: 8,
-    boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
+    background: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    boxShadow: SHADOW.float,
 
-    padding: "10px 14px",
+    padding: "12px 16px",
     display: "flex",
     flexDirection: "column",
-    gap: 6,
+    gap: 8,
     width: 480,
+    maxWidth: "calc(100vw - 32px)",
 
-    fontFamily: "system-ui, sans-serif",
+    fontFamily: FONT_FAMILY,
   },
 
-  row: { display: "flex", gap: 6, alignItems: "center" },
+  row: { display: "flex", gap: 8, alignItems: "center" },
 
   langToggle: {
     display: "flex",
-    border: "1px solid #d1d5db",
-    borderRadius: 6,
+    border: `1px solid ${COLORS.border}`,
+    borderRadius: RADIUS.sm,
     overflow: "hidden",
+    flexShrink: 0,
   },
 
   langButton: {
-    padding: "8px 8px",
+    padding: "8px 10px",
     fontSize: 12,
+    fontWeight: 600,
     border: "none",
-    background: "#f9fafb",
+    background: COLORS.hoverBg,
     cursor: "pointer",
   },
 
-  langButtonActive: { background: "#2563eb", color: "#fff" },
+  langButtonActive: { background: COLORS.primary, color: "#fff" },
 
   input: {
     flex: 1,
-    padding: "8px 10px",
+    minWidth: 0,
+    padding: "10px 12px",
     fontSize: 14,
-    border: "1px solid #d1d5db",
-    borderRadius: 6,
+    border: `1px solid ${COLORS.borderStrong}`,
+    borderRadius: RADIUS.sm,
+    outline: "none",
   },
 
   micButton: {
-    padding: "8px 10px",
+    padding: "8px 12px",
     fontSize: 14,
-    border: "1px solid #d1d5db",
-    borderRadius: 6,
-    background: "#f9fafb",
+    border: `1px solid ${COLORS.borderStrong}`,
+    borderRadius: RADIUS.sm,
+    background: COLORS.hoverBg,
     cursor: "pointer",
+    flexShrink: 0,
   },
 
   micButtonActive: {
-    border: "1px solid #dc2626",
-    background: "#fee2e2",
-    color: "#dc2626",
+    border: `1px solid ${COLORS.danger}`,
+    background: COLORS.dangerBg,
+    color: COLORS.danger,
   },
 
   button: {
-    padding: "8px 12px",
+    padding: "10px 16px",
     fontSize: 14,
+    fontWeight: 600,
     border: "none",
-    borderRadius: 6,
-    background: "#2563eb",
+    borderRadius: RADIUS.sm,
+    background: COLORS.primary,
     color: "#fff",
     cursor: "pointer",
+    flexShrink: 0,
   },
 
   stopButton: {
-    padding: "8px 12px",
+    padding: "10px 16px",
     fontSize: 14,
+    fontWeight: 600,
     border: "none",
-    borderRadius: 6,
-    background: "#dc2626",
+    borderRadius: RADIUS.sm,
+    background: COLORS.danger,
     color: "#fff",
     cursor: "pointer",
+    flexShrink: 0,
   },
 
-  progress: { fontSize: 12, color: "#6b7280" },
+  progress: { fontSize: 12, color: COLORS.textMuted },
 
-  feedback: { fontSize: 13, color: "#111827" },
+  feedback: { fontSize: 13, color: COLORS.textPrimary },
 
-  errorText: { fontSize: 13, color: "#b91c1c" },
+  errorText: { fontSize: 13, color: COLORS.danger },
 };

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import * as Sentry from '@sentry/react';
 
 import 'leaflet/dist/leaflet.css';
+import './index.css';
 import './lib/posthog';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
