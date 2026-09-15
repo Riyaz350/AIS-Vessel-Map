@@ -22,7 +22,7 @@ enableLogs: true,
   ],
 
   // Record 10% of normal user sessions
-  replaysSessionSampleRate: 0.1,
+  replaysSessionSampleRate: 1.0,
   replaysOnErrorSampleRate: 1.0,
 
 });
